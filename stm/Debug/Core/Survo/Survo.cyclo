@@ -1,0 +1,4 @@
+../Core/Survo/Survo.c:14:6:Survo_Init	2
+../Core/Survo/Survo.c:25:6:Survo_SetAngle	3
+../Core/Survo/Survo.c:43:6:Survo_SetCenter	1
+../Core/Survo/Survo.c:48:6:Survo_Stop	1

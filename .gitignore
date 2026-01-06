@@ -37,24 +37,24 @@ Thumbs.db
 
 ## STM32CubeMX generated files
 # Build output
-Debug/
-Release/
-*.o
-*.elf
-*.map
-*.bin
-*.hex
+# Debug/
+# Release/
+# *.o
+# *.elf
+# *.map
+# *.bin
+# *.hex
 
 # IDE specific files
-.settings/
-Drivers/
-.cproject
-.mxproject
-.project
-*.launch
+# .settings/
+# Drivers/
+# .cproject
+# .mxproject
+# .project
+# *.launch
 
 # RTOS files
-Middlewares
+# Middlewares
 
 # Python
 __pycache__/
