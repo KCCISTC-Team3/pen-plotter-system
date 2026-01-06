@@ -55,3 +55,7 @@ Drivers/
 
 # RTOS files
 Middlewares
+
+# Python
+__pycache__/
+*.pyc
