@@ -16,7 +16,7 @@ if {[info exists ::env(TOP)]} {
     set top $::env(TOP)
 } else {
     # Top-level module name (edit this)
-    set top "top"                    ;# Top-level module name (edit this)
+    set top "TOP"                    ;# Top-level module name (edit this)
 }
 # set tb_top "tb_$top"                 ;# Testbench top module name (edit this)
 
