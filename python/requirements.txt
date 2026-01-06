@@ -2,3 +2,6 @@
 Pillow
 pyserial
 PyQt6
+
+# Optimazation
+opencv-python
