@@ -4,7 +4,7 @@ import numpy as np
 W, H = 170, 240
 PAYLOAD_LEN = (W * H) // 8  # 5100 bytes
 
-
+# will be used in io/fpga_uart_receiver.py
 def load_hex_txt_to_bytes(path: str) -> bytes:
     # Extract all 2-hex-digit tokens (optionally prefixed with '0x') and convert to bytes.
     # Examples accepted: "AA 01 FF", "0xAA,0x01,0xFF", line-separated, etc.
@@ -18,6 +18,7 @@ def load_hex_txt_to_bytes(path: str) -> bytes:
     return bytes(int(t, 16) for t in tokens)
 
 
+# will be used in imaging/unpacker.py
 def extract_payload_after_header(data: bytes, header: int = 0xAA, payload_len: int = PAYLOAD_LEN) -> bytes:
     # Find the first occurrence of the header byte and slice out the payload right after it.
     idx = data.find(bytes([header]))
@@ -34,6 +35,7 @@ def extract_payload_after_header(data: bytes, header: int = 0xAA, payload_len: i
     return data[start:end]
 
 
+# will be used in imaging/unpacker.py
 def unpack_payload_to_image(payload_5100: bytes, w: int = W, h: int = H, bitorder: str = "big") -> np.ndarray:
     # Unpack 5100 bytes (40800 bits) into a (H, W) binary image.
     # bitorder="big" means MSB-first; use "little" if the image appears scrambled.
@@ -57,9 +59,11 @@ if __name__ == "__main__":
     # payload = raw_bytes[:PAYLOAD_LEN]
 
     img01 = unpack_payload_to_image(payload, bitorder="big")  # try "little" if needed
+    img255 = (img01 * 255).astype(np.uint8)
 
     print("img01 shape:", img01.shape)          # (240, 170)
     print("img01 dtype:", img01.dtype)          # uint8
     print("unique values:", np.unique(img01))   # [0 1] expected
     print(img01)
     np.savetxt("output_image_test.txt", img01, fmt="%d")  # save as text file for verification
+    np.savetxt("output_image_test_255.txt", img255, fmt="%d")  # save as text file for verification
