@@ -62,3 +62,4 @@ if __name__ == "__main__":
     print("img01 dtype:", img01.dtype)          # uint8
     print("unique values:", np.unique(img01))   # [0 1] expected
     print(img01)
+    np.savetxt("output_image_test.txt", img01, fmt="%d")  # save as text file for verification
