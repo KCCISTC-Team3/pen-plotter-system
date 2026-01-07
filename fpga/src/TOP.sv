@@ -151,16 +151,17 @@ module TOP (
             .o_r_data(canny_r), .o_g_data(canny_g), .o_b_data(canny_b)
         );
 
-        assign tx_push = canny_de & (~tx_fifo_full); 
-        
-        uart_tx_fifo U_TX_FIFO (
+
+
+        top_uart_tx_logic U_TOP_UART_TX_LOGIC(
             .clk(clk),
             .reset(reset),
-            .tx_data(canny_r),
-            .push(tx_push),
-            .tx(tx),
-            .tx_fifo_full(tx_fifo_full)
+            .canny_de(canny_de),
+            .canny_r(canny_r),
+            .tx(tx)
         );
+
+
 
 endmodule
 

@@ -23,7 +23,7 @@ module top_uart_rx_logic(
     .rx(rx),
     .empty(empty),
     .pop_data(pop_data),
-    .rx_done(rx_done)
+    .rx_done()
     );
 
     data_assembly_fsm U_DATA_ASSEMBLY_FSM(
@@ -31,11 +31,11 @@ module top_uart_rx_logic(
     .reset(reset),
     .empty(empty),
     .pop_data(pop_data),
-    .rx_done(rx_done),
     .rgb_data(rgb_data),
     .pixel_done(pixel_done),
     .pixel_cnt(pixel_cnt),
     .frame_done(frame_done)
     );
+
 
 endmodule
