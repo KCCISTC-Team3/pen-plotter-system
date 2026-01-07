@@ -78,8 +78,8 @@ module tb_fifo_fsm_ram(
   always #5 clk = ~clk; // 100MHz
 
   localparam int BIT_TIME_NS  = 104_166; // 9600bps ideal
-  localparam int STOP_HOLD_NS = 1_000;   // ³Ê ¿ø·¡ TB ½ºÅ¸ÀÏ À¯Áö
-  localparam int IDLE_GAP_NS  = 20_000;  // ÇÁ·¹ÀÓ °£ ¾à°£ ¶ç¿ì±â(¿øÇÏ¸é Á¶Àý)
+  localparam int STOP_HOLD_NS = 1_000;   // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ TB ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+  localparam int IDLE_GAP_NS  = 20_000;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½à°£ ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½)
 
   int unsigned k;
   reg [7:0] send_data;
