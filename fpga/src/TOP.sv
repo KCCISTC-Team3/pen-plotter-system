@@ -148,11 +148,11 @@ module TOP (
             .o_vsync(),
             .o_hsync(),
             .o_de(canny_de), // 350clk delay
-            .o_r_data(canny_ r), .o_g_data(canny_g), .o_b_data(canny_b)
+            .o_r_data(canny_r), .o_g_data(canny_g), .o_b_data(canny_b)
         );
 
-        assign tx_push =frame_done & (~tx_fifo_full); 
-
+        assign tx_push = canny_de & (~tx_fifo_full); 
+        
         uart_tx_fifo U_TX_FIFO (
             .clk(clk),
             .reset(reset),
