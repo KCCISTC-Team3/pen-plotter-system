@@ -26,7 +26,7 @@ module tick_gen_16(
     output b_16tick
     );
 
-    parameter BAUDRATE = 9600*16 ;
+    parameter BAUDRATE = 115200*16 ;
     localparam BAUD_COUNT = 100_000_000/BAUDRATE;
     reg [$clog2(BAUD_COUNT)-1 : 0] count_reg, count_next;
     reg tick_reg, tick_next;

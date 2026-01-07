@@ -97,7 +97,7 @@ module TOP (
             .i_r_data(o_r), .i_g_data(o_g), .i_b_data(o_b),
             .o_vsync(),
             .o_hsync(),
-            .o_de(gray_de),
+            .o_de(gray_de), // 1clk delay
             .o_r_data(gray_r), .o_g_data(gray_g), .o_b_data(gray_b)
         );
 
@@ -113,7 +113,7 @@ module TOP (
             .i_r_data(gray_r), .i_g_data(gray_g), .i_b_data(gray_b),
             .o_vsync(),
             .o_hsync(),
-            .o_de(gauss_de),
+            .o_de(gauss_de), // 2clk delay
             .o_r_data(gauss_r), .o_g_data(gauss_g), .o_b_data(gauss_b)
         );
 
@@ -129,7 +129,7 @@ module TOP (
             .i_r_data(gauss_r), .i_g_data(gauss_g), .i_b_data(gauss_b),
             .o_vsync(),
             .o_hsync(),
-            .o_de(sobel_de),
+            .o_de(sobel_de), // 3clk delay
             .o_r_data(sobel_r), .o_g_data(sobel_g), .o_b_data(sobel_b)
         );
 
@@ -147,11 +147,11 @@ module TOP (
             .i_r_data(sobel_r), .i_g_data(sobel_g), .i_b_data(sobel_b),
             .o_vsync(),
             .o_hsync(),
-            .o_de(canny_de),
-            .o_r_data(canny_r), .o_g_data(canny_g), .o_b_data(canny_b)
+            .o_de(canny_de), // 350clk delay
+            .o_r_data(canny_ r), .o_g_data(canny_g), .o_b_data(canny_b)
         );
 
-        assign tx_push = canny_de & (~tx_fifo_full);
+        assign tx_push =frame_done & (~tx_fifo_full); 
 
         uart_tx_fifo U_TX_FIFO (
             .clk(clk),
