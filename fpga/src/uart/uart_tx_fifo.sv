@@ -26,7 +26,7 @@ module uart_tx_fifo(
     input [7:0]tx_data,
     input push,
     output tx,
-    outpuy tx_fifo_full
+    output tx_fifo_full
     );
     
     wire [7:0] w_tx_data;

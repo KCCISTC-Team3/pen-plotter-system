@@ -61,6 +61,8 @@ module uart_rx_fifo(
     .full(),
     .empty(empty) // to kit and tx
     );
+    
+
 endmodule
 
 
