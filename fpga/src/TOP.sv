@@ -20,6 +20,7 @@ module TOP (
         logic [23:0] read_img_data;
         logic        DE;
 
+
         logic [7:0]  o_r, o_g, o_b;
 
         logic        gray_de;
@@ -78,11 +79,14 @@ module TOP (
             .start_read(start_read),
             .img(read_img_data),
             .addr(read_addr),
+            .re(oe),
             .o_de(DE),
             .r_port(o_r),
             .g_port(o_g),
             .b_port(o_b)
         );
+
+
 
         DS_Gray #(
             .WIDTH(8),
@@ -151,16 +155,17 @@ module TOP (
             .o_r_data(canny_r), .o_g_data(canny_g), .o_b_data(canny_b)
         );
 
-        assign tx_push = canny_de & (~tx_fifo_full); 
-        
-        uart_tx_fifo U_TX_FIFO (
+
+
+        top_uart_tx_logic U_TOP_UART_TX_LOGIC(
             .clk(clk),
             .reset(reset),
-            .tx_data(canny_r),
-            .push(tx_push),
-            .tx(tx),
-            .tx_fifo_full(tx_fifo_full)
+            .canny_de(canny_de),
+            .canny_r(canny_r),
+            .tx(tx)
         );
+
+
 
 endmodule
 
@@ -171,7 +176,8 @@ module ImgReader(
     input  logic         start_read,  
     input  logic [23:0]  img,         
     output logic [15:0]  addr,        
-    output logic         o_de,        
+    output logic         o_de,
+    output logic         re,        
     output logic [7:0]   r_port,
     output logic [7:0]   g_port,
     output logic [7:0]   b_port
@@ -180,6 +186,7 @@ module ImgReader(
     logic [7:0] x_cnt; // 0~169 카운터
     logic [7:0] y_cnt; // 0~239 카운터
     logic       reading;
+    logic [23:0] reg_rgb_data;
 
     
     always_ff @(posedge clk) begin
@@ -212,9 +219,13 @@ module ImgReader(
     assign addr = reading ? (y_cnt * 170 + x_cnt) : 'h0;
  
     always_ff @(posedge clk) begin
-        o_de <= reading;
+        re <= reading;
+        o_de <= re;
     end
-    assign {r_port, g_port, b_port} = o_de ? {img[23:16], img[15:8], img[7:0]} : 'b0;
+
+    assign reg_rgb_data  = re ? {img[23:16], img[15:8], img[7:0]} : 'b0;
+    assign {r_port, g_port, b_port} = o_de? reg_rgb_data : 'b0;
+   
 
 endmodule
 

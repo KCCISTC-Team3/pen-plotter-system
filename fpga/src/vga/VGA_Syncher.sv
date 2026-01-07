@@ -96,7 +96,7 @@ module vga_sync (
     assign y_pixel = v_counter;
 endmodule
 
-module ImgReader(
+module ImgReader_2(
     input  logic                       DE,
     input  logic                 [9:0] x_pixel,
     input  logic                 [9:0] y_pixel,
@@ -109,4 +109,4 @@ module ImgReader(
 
     assign addr = DE ? (640 * y_pixel + x_pixel) : 'bz;
     assign {r_port, g_port, b_port} = DE ? {img[23:16], img[15:8], img[7:0]} : 'b0;
-endmodule
+endmodule 
