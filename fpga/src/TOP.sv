@@ -7,15 +7,16 @@ module TOP (
     output logic tx 
 );
 
-        logic [7:0]  rx_pop_data;
-        logic        rx_empty;
+        
         logic        start_read;
+        logic       w_start_read;
+        wire        oe;
 
-        logic [15:0] write_addr;
+        logic [$clog2(240*170)-1:0] write_addr;
         logic [23:0] write_rgb_data;
         logic        write_en;
 
-        logic [15:0] read_addr;
+        logic [$clog2(240*170)-1:0] read_addr;
         logic [23:0] read_img_data;
         logic        DE;
 
@@ -36,27 +37,32 @@ module TOP (
         logic        tx_fifo_full;
         logic        tx_push;
 
-        uart_rx_fifo U_RX_FIFO (
+        top_uart_rx_logic U_TOP_UART_RX_LOGIC (
             .clk(clk),
             .reset(reset),
             .rx(rx),
-            .empty(rx_empty),
-            .pop_data(rx_pop_data),
-            .rx_done()
-        );
-
-        data_assembly_fsm U_ASSEMBLY (
-            .clk(clk),
-            .reset(reset),
-            .empty(rx_empty),
-            .pop_data(rx_pop_data),
-            .write_en(write_en),
-            .write_addr(write_addr),
             .rgb_data(write_rgb_data),
-            .start_read(start_read)
+            .pixel_done(write_en),
+            .pixel_cnt(write_addr),
+            .frame_done(w_start_read)
         );
 
-        Simple_DP_RAM U_FRAME_BUFFER (
+
+        img_ram U_IMG_RAM(
+           .clk(clk),
+           .we(write_en), //pixel_done
+           .wData(write_rgb_data), 
+           .wAddr(write_addr), //pixel_cnt
+           .frame_done(w_start_read),
+           .o_frame_done(start_read),
+           .oe(oe), //read enable
+           .rAddr(read_addr),
+           .imgData(read_img_data)
+        );
+
+
+
+        /*Simple_DP_RAM U_FRAME_BUFFER (
             .clk(clk),
             .we(write_en),
             .waddr(write_addr),
@@ -64,6 +70,7 @@ module TOP (
             .raddr(read_addr),
             .rdata(read_img_data)
         );
+        */
 
         ImgReader U_ImgReader (
             .clk(clk),
