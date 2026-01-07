@@ -12,7 +12,7 @@ module top_uart_tx_logic(
     logic [$clog2(5100)-1:0] wAddr;
     logic frame_tick;
     logic tx_fifo_full;
-    logix [7:0] tx_data;
+    logic [7:0] tx_data;
 
 
     pixel_8_fsm U_PIXEL_8_FSM(
@@ -29,11 +29,12 @@ module top_uart_tx_logic(
 
     tx_ram U_TX_RAM (
         .clk(clk),
+        .reset(reset),
         .we(we), 
         .wData(wData), 
         .wAddr(wAddr), 
         .frame_tick(frame_tick),   
-        .re(frame_tick&&~tx_fifo_full),
+        .re(frame_done&&~tx_fifo_full),
         .rData(tx_data), 
         .frame_done(frame_done)   
 
@@ -44,7 +45,7 @@ module top_uart_tx_logic(
         .clk(clk),
         .reset(reset),
         .tx_data(tx_data),
-        .push(frame_tick&&~tx_fifo_full),
+        .push(frame_done&&~tx_fifo_full),
         .tx(tx),
         .tx_fifo_full(tx_fifo_full)
     );

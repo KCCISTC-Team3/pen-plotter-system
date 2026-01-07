@@ -11,9 +11,10 @@ module pixel_8_fsm (
     output frame_tick
 );
 
-typedef enum logic [1:0] {
+typedef enum logic [2:0] {
         ST_IDLE,
         ST_DATA,
+        ST_ADDR,
         ST_DONE
 } state;
 
@@ -74,9 +75,8 @@ always @(*) begin
                 pixel_cnt_next = pixel_cnt_reg + 1;
 
                 if (pixel_cnt_reg == 3'b111) begin
-                    next_state = ST_IDLE;
+                    next_state = ST_ADDR;
                     pixel_cnt_next = 3'b0;
-                    wAddr_next = wAddr_reg + 1;
                     we_next = 1'b1;
                     if(wAddr_reg == 5099) begin
                         next_state = ST_DONE; 
@@ -86,6 +86,15 @@ always @(*) begin
                 end
 
             end 
+        end
+        ST_ADDR: begin
+            wAddr_next = wAddr_reg + 1;
+            next_state = ST_IDLE;
+
+            if (canny_de) begin
+                wData_next[pixel_cnt_reg] = canny_r[0]; 
+                pixel_cnt_next = pixel_cnt_reg + 1;
+            end
         end
 
         ST_DONE: begin
