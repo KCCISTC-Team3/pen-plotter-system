@@ -33,7 +33,7 @@
 Thumbs.db
 .nvim/
 
-**/deprecated/
+# **/deprecated/
 
 ## STM32CubeMX generated files
 # Build output
@@ -55,3 +55,7 @@ Drivers/
 
 # RTOS files
 Middlewares
+
+# Python
+__pycache__/
+*.pyc
