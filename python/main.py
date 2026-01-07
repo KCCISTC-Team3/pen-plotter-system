@@ -9,11 +9,10 @@ from io_utils import *
 from packet_gen import *
 
 
-
 def main():
     ## Load raw bytes from hex text file (test only)
-    raw_bytes = load_hex_txt_to_bytes("./contour_optimization/binary_dump_test.txt")
-    # raw_bytes = load_hex_txt_to_bytes("./contour_optimization/binary_dump_test_complex.txt")
+    # raw_bytes = load_hex_txt_to_bytes("./contour_optimization/binary_dump_test.txt")
+    raw_bytes = load_hex_txt_to_bytes("./contour_optimization/binary_dump_test_complex.txt")
 
     ## Payload extraction after 0xAA
     payload = extract_payload_after_header(raw_bytes, header=0xAA, payload_len=PAYLOAD_LEN)
@@ -35,10 +34,13 @@ def main():
 
 
     ## Contour optimization (greedy reorder)
-    ordered_contours, penup_px = greedy_reorder_contours(contours)
+    ordered_contours, penup_px = greedy_reorder_contours(
+                contours,
+                start_point=np.array([0, 0], dtype=np.int32) # origin at (0,0)
+    )
 
     # Print per-contour path (default: first 30 points)
-    print_contour_paths(ordered_contours, max_points_per_contour=30)
+    # print_contour_paths(ordered_contours, max_points_per_contour=30)
 
     # Print summary statistics
     lengths = [len(c) for c in ordered_contours]
@@ -53,6 +55,28 @@ def main():
         print("="*50)
 
 
+    ## Command generation
+
+
+    # 1) Convert each contour to mm and densify
+    contours_mm = []
+    for c_xy in ordered_contours:
+        c_mm = contour_pixels_to_mm(c_xy, pixel_to_mm=PIXEL_TO_MM, origin_xy=(0.0, 0.0))
+        c_mm_dense = densify_polyline_mm(c_mm, step_mm=STEP_MM)
+        contours_mm.append(c_mm_dense)
+
+    # 2) Build commands with pen up/down
+    cmds = build_command_sequence_from_contours_mm(contours_mm, pen_up_z=1, pen_down_z=0)
+
+    print("Total commands:", len(cmds))
+    print("First 50 commands:")
+    for line in cmds[:50]:
+        print(line.strip())
+
+    # Optional: save for inspection
+    with open("commands.txt", "w", encoding="utf-8") as f:
+        f.writelines(cmds)
+        
     ## Visualization: original binary, overlay, optimized with pen-up links
     binary_bgr = cv2.cvtColor(img255, cv2.COLOR_GRAY2BGR)   # original binary image in BGR
     overlay = draw_contours_overlay(img255, contours)       # overlay with contours drawn in red
@@ -75,7 +99,6 @@ def main():
     cv2.destroyAllWindows()
 
 
-    #
 
 if __name__ == "__main__":
     main()

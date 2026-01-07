@@ -4,3 +4,8 @@ PAYLOAD_LEN = (W * H) // 8  # 5100 bytes
 HEADER_FPGA = 0xAA
 BITORDER = "big"
 MIN_CONTOUR_LEN_PX = 10
+
+
+
+PIXEL_TO_MM = 0.5
+STEP_MM = 0.2
