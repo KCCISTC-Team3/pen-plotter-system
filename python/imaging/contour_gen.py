@@ -1,1 +1,0 @@
-# findContours + filtering + overlay
