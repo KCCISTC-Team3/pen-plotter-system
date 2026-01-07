@@ -19,6 +19,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+
 module DS_Gray #(
     parameter WIDTH = 8,
     parameter BRIGHTNESS_ADD = 30,
@@ -40,46 +41,60 @@ module DS_Gray #(
     output logic [WIDTH-1:0] o_b_data
 );
 
+    logic        [WIDTH+7:0] r_sum, g_sum, b_sum;
+    logic        [WIDTH+7:0] gray_sum;
+    logic signed [WIDTH+8:0] gray_bright;
 
-    logic [WIDTH+9:0] gray_sum; 
-    logic [WIDTH+9:0] gray_bright;
-    
-    // Sync Delay (1 Cycle)
-    logic vsync_d, hsync_d, de_d;
+    logic [2:0] v_delay, h_delay, d_delay;
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
-            gray_sum    <= 0;
-            gray_bright <= 0;
-            o_r_data    <= 0;
-            o_g_data    <= 0;
-            o_b_data    <= 0;
-            
-            vsync_d <= 0; hsync_d <= 0; de_d <= 0;
-            o_vsync <= 0; o_hsync <= 0; o_de <= 0;
+            v_delay      <= '0;
+            h_delay      <= '0;
+            d_delay      <= '0;
+            r_sum        <= '0;
+            g_sum        <= '0;
+            b_sum        <= '0;
+            gray_sum     <= '0;
+            gray_bright  <= '0;
+            o_r_data     <= '0;
+            o_g_data     <= '0;
+            o_b_data     <= '0;
+            o_vsync      <= '0;
+            o_hsync      <= '0;
+            o_de         <= '0;
         end else begin
-            if (i_de) begin
-                gray_sum <= (i_r_data * 77) + (i_g_data * 150) + (i_b_data * 29);
-                gray_bright <= (gray_sum >> 8) + BRIGHTNESS_ADD - BRIGHTNESS_SUB;
+            v_delay <= {v_delay[1:0], i_vsync};
+            h_delay <= {h_delay[1:0], i_hsync};
+            d_delay <= {d_delay[1:0], i_de};
 
-                if (gray_bright > {WIDTH{1'b1}}) begin
-                    o_r_data <= {WIDTH{1'b1}};
-                    o_g_data <= {WIDTH{1'b1}};
-                    o_b_data <= {WIDTH{1'b1}};
-                end else begin
-                    o_r_data <= gray_bright[WIDTH-1:0];
-                    o_g_data <= gray_bright[WIDTH-1:0];
-                    o_b_data <= gray_bright[WIDTH-1:0];
-                end
-            end else begin
-                o_r_data <= 0;
-                o_g_data <= 0;
-                o_b_data <= 0;
+            r_sum <= (i_r_data << 6) + (i_r_data << 3) + (i_r_data << 2) + i_r_data;          // 64 +8 +4 +1   == 77
+            g_sum <= (i_g_data << 7) + (i_g_data << 4) + (i_g_data << 2) + (i_g_data << 1);   // 128 +16 +4 +2 == 150
+            b_sum <= (i_b_data << 4) + (i_b_data << 3) + (i_b_data << 2) + i_b_data;          // 16 +8 +4 +1   == 29
+
+            gray_sum <= (r_sum + g_sum + b_sum) >> 8;
+
+            if (d_delay[1]) begin
+                 gray_bright <= $signed({1'b0, gray_sum}) + BRIGHTNESS_ADD - BRIGHTNESS_SUB;
             end
 
-            o_vsync <= i_vsync;
-            o_hsync <= i_hsync;
-            o_de    <= i_de;
+            if (gray_bright > 255) begin
+                o_r_data <= 8'hFF;
+                o_g_data <= 8'hFF;
+                o_b_data <= 8'hFF;
+            end else if (gray_bright < 0) begin
+                o_r_data <= 8'h00;
+                o_g_data <= 8'h00;
+                o_b_data <= 8'h00;
+            end else begin
+                o_r_data <= gray_bright[7:0];
+                o_g_data <= gray_bright[7:0];
+                o_b_data <= gray_bright[7:0];
+            end
+
+            o_vsync <= v_delay[2];
+            o_hsync <= h_delay[2];
+            o_de    <= d_delay[2];
         end
     end
 
