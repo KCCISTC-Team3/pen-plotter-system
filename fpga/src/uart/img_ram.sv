@@ -98,7 +98,7 @@ module tx_ram (
             if(frame_tick) begin
                 frame_done <= 1;
             end
-            else if (we) begin
+            else if (rAddr_cnt == (30*170)-1) begin
                 frame_done <= 0;
             end
             else begin
