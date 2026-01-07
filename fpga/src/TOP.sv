@@ -48,7 +48,7 @@ module TOP (
         );
 
 
-        img_ram U_IMG_RAM(
+        rx_ram U_IMG_RAM(
            .clk(clk),
            .we(write_en), //pixel_done
            .wData(write_rgb_data), 
