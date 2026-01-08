@@ -1,7 +1,6 @@
-# UART
-Pillow
-pyserial
-PyQt6
+pyserial    # Protocol
+PyQt6       # GUI
 
-# Optimazation
+# Image processing
+Pillow
 opencv-python

@@ -2,7 +2,7 @@
 
 module top_filter #(
     parameter WIDTH = 8,
-    parameter H_RES = 640,
+    parameter H_RES = 170,
     parameter BRIGHTNESS_ADD = 30,
     parameter BRIGHTNESS_SUB = 30,
     parameter TH_HIGH = 230,

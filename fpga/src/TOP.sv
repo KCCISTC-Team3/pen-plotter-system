@@ -51,7 +51,7 @@ module TOP (
 
     top_filter #(
         .WIDTH(8),
-        .H_RES(640),
+        .H_RES(170),
         .BRIGHTNESS_ADD(30),
         .BRIGHTNESS_SUB(30),
         .TH_HIGH(230),
