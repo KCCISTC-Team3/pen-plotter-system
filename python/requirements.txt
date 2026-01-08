@@ -1,4 +1,6 @@
-# UART
+pyserial    # Protocol
+# PyQt6       # GUI
+
+# Image processing
 Pillow
-pyserial
-PyQt6
+opencv-python
