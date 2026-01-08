@@ -8,6 +8,8 @@ dependencies:
   - python=3.10
   - pip
   - numpy
+  - pyqt=6
+
 
   - pip:
       - -r requirements.txt
