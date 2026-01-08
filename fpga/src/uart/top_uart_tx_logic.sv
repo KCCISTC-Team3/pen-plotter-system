@@ -7,12 +7,12 @@ module top_uart_tx_logic(
 
 );
 
-    logic we;
-    logic [7:0] wData;
-    logic [$clog2(5100)-1:0] wAddr;
-    logic frame_tick;
-    logic tx_fifo_full;
-    logic [7:0] tx_data;
+    logic                    we;
+    logic [             7:0] wData;
+    logic [$clog2(5160)-1:0] wAddr;
+    logic                    frame_tick;
+    logic                    tx_fifo_full;
+    logic [             7:0] tx_data;
 
 
     pixel_8_fsm U_PIXEL_8_FSM(

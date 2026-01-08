@@ -1,14 +1,14 @@
 
 
 module pixel_8_fsm (
-    input clk,
-    input reset,
-    input canny_de,
-    input [7:0] canny_r,
-    output we,
-    output [7:0] wData,
-    output [$clog2(5100)-1:0] wAddr,
-    output frame_tick
+    input  logic                    clk,
+    input  logic                    reset,
+    input  logic                    canny_de,
+    input  logic [             7:0] canny_data,
+    output logic                    we,
+    output logic [             7:0] wData,
+    output logic [$clog2(5160)-1:0] wAddr,
+    output logic                    frame_tick
 );
 
 typedef enum logic [1:0] {
@@ -19,11 +19,11 @@ typedef enum logic [1:0] {
 
 state current_state, next_state;
 
-reg [7:0] wData_reg, wData_next;
-reg [$clog2(5100)-1:0] wAddr_reg, wAddr_next;
-reg frame_tick_reg, frame_tick_next; 
-reg [2:0]pixel_cnt_reg, pixel_cnt_next; //0~7
-reg we_reg, we_next;
+    logic [7:0] wData_reg, wData_next;
+    logic [$clog2(5160)-1:0] wAddr_reg, wAddr_next;
+    logic frame_tick_reg, frame_tick_next;
+    logic [2:0] pixel_cnt_reg, pixel_cnt_next;  //0~7
+    logic we_reg, we_next;
 
 assign wData = wData_reg;
 assign wAddr = wAddr_reg;
@@ -73,13 +73,28 @@ always @(*) begin
                 wData_next[pixel_cnt_reg] = canny_r[0]; 
                 pixel_cnt_next = pixel_cnt_reg + 1;
 
-                if (pixel_cnt_reg == 3'b111) begin
-                    next_state = ST_IDLE;
-                    pixel_cnt_next = 3'b0;
-                    wAddr_next = wAddr_reg + 1;
-                    we_next = 1'b1;
-                    if(wAddr_reg == 5099) begin
-                        next_state = ST_DONE; 
+        case (current_state)
+            ST_IDLE: begin
+                if (canny_de) begin
+                    next_state = ST_DATA;
+                    wData_next[pixel_cnt_reg] = canny_data[0];
+                    pixel_cnt_next = pixel_cnt_reg + 1;
+                end
+            end
+            ST_DATA: begin
+                if (canny_de) begin
+                    wData_next[pixel_cnt_reg] = canny_data[0];
+                    pixel_cnt_next = pixel_cnt_reg + 1;
+
+                    if (pixel_cnt_reg == 3'b111) begin
+                        next_state = ST_ADDR;
+                        pixel_cnt_next = 3'b0;
+                        we_next = 1'b1;
+                        if (wAddr_reg == 5159) begin
+                            next_state = ST_DONE;
+                        end
+                    end else if (pixel_cnt_reg < 3'b111) begin
+                        next_state = ST_DATA;
                     end
                 end else if (pixel_cnt_reg < 3'b111) begin
                     next_state = ST_DATA; 
