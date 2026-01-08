@@ -50,3 +50,8 @@ def draw_contours_overlay(img255: np.ndarray, contours_xy: List[np.ndarray]) -> 
     cv_contours = [c.reshape(-1, 1, 2).astype(np.int32) for c in contours_xy]
     cv2.drawContours(bgr, cv_contours, contourIdx=-1, color=(0, 0, 255), thickness=1)
     return bgr
+
+
+def count_points(contours):
+    # for summary statistics
+    return sum(len(c) for c in contours if c is not None)

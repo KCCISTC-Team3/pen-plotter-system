@@ -14,8 +14,8 @@ def format_cmd(x_mm: float, y_mm: float, z: int) -> str:
     return f"x:{x_mm:05.1f}y:{y_mm:05.1f}z:{z:d}\n"
 
 
-def build_command_sequence_from_contours_mm(
-    contours_mm: List[np.ndarray],
+def build_command_sequence_from_contours_xy(
+    contours_xy: List[np.ndarray],
     pen_up_z: int = 1,
     pen_down_z: int = 0,
 ) -> List[str]:
@@ -37,7 +37,7 @@ def build_command_sequence_from_contours_mm(
     # Initial state: pen up at current position (position may be ignored by MCU)
     cmds.append(format_cmd(0.0, 0.0, pen_up_z))
 
-    for c in contours_mm:
+    for c in contours_xy:
         if c is None or len(c) == 0:
             continue
 
