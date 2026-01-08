@@ -21,20 +21,30 @@ module top_filter #(
     output logic             o_de,
     output logic [WIDTH-1:0] o_data
 );
+    logic       gray_vsync;
+    logic       gray_hsync;
     logic       gray_de;
     logic [7:0] gray_data;
 
+    logic       gauss_vsync;
+    logic       gauss_hsync;
     logic       gauss_de;
     logic [7:0] gauss_data;
 
+    logic       sobel_vsync;
+    logic       sobel_hsync;
     logic       sobel_de;
     logic [7:0] sobel_data;
 
+    logic       canny_vsync;
+    logic       canny_hsync;
     logic       canny_de;
     logic [7:0] canny_data;
 
-    assign o_de   = canny_de;
-    assign o_data = canny_data;
+    assign o_vsync = canny_vsync;
+    assign o_hsync = canny_hsync;
+    assign o_de    = canny_de;
+    assign o_data  = canny_data;
 
     DS_Gray #(
         .WIDTH(8),
@@ -43,14 +53,14 @@ module top_filter #(
     ) U_DS_Gray (
         .clk(clk),
         .rstn(rstn),
-        .i_vsync(1'b0),
-        .i_hsync(1'b0),
+        .i_vsync(i_vsync),
+        .i_hsync(i_hsync),
         .i_de(i_de),
         .i_r_data(i_r_data),
         .i_g_data(i_g_data),
         .i_b_data(i_b_data),
-        .o_vsync(),
-        .o_hsync(),
+        .o_vsync(gray_vsync),
+        .o_hsync(gray_hsync),
         .o_de(gray_de),  // 1clk delay
         .o_data(gray_data)
     );
@@ -61,12 +71,12 @@ module top_filter #(
     ) U_Gaussian (
         .clk(clk),
         .rstn(rstn),
-        .i_vsync(1'b0),
-        .i_hsync(1'b0),
+        .i_vsync(gray_vsync),
+        .i_hsync(gray_hsync),
         .i_de(gray_de),
         .i_data(gray_data),
-        .o_vsync(),
-        .o_hsync(),
+        .o_vsync(gauss_vsync),
+        .o_hsync(gauss_hsync),
         .o_de(gauss_de),  // 2clk delay
         .o_data(gauss_data)
     );
@@ -77,12 +87,12 @@ module top_filter #(
     ) U_Sobel (
         .clk(clk),
         .rstn(rstn),
-        .i_vsync(1'b0),
-        .i_hsync(1'b0),
+        .i_vsync(gauss_vsync),
+        .i_hsync(gauss_hsync),
         .i_de(gauss_de),
         .i_data(gauss_data),
-        .o_vsync(),
-        .o_hsync(),
+        .o_vsync(sobel_vsync),
+        .o_hsync(sobel_hsync),
         .o_de(sobel_de),  // 3clk delay
         .o_data(sobel_data)
     );
@@ -95,12 +105,12 @@ module top_filter #(
     ) U_Canny_Edge (
         .clk(clk),
         .rstn(rstn),
-        .i_vsync(1'b0),
-        .i_hsync(1'b0),
+        .i_vsync(sobel_vsync),
+        .i_hsync(sobel_hsync),
         .i_de(sobel_de),
         .i_data(sobel_data),
-        .o_vsync(),
-        .o_hsync(),
+        .o_vsync(canny_vsync),
+        .o_hsync(canny_hsync),
         .o_de(canny_de),  // 350clk delay
         .o_data(canny_data)
     );
