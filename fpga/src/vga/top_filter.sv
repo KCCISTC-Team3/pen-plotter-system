@@ -42,7 +42,7 @@ module top_filter #(
         .BRIGHTNESS_SUB(0)
     ) U_DS_Gray (
         .clk(clk),
-        .rstn(!reset),
+        .rstn(rstn),
         .i_vsync(1'b0),
         .i_hsync(1'b0),
         .i_de(i_de),
@@ -60,7 +60,7 @@ module top_filter #(
         .H_RES(170)
     ) U_Gaussian (
         .clk(clk),
-        .rstn(!reset),
+        .rstn(rstn),
         .i_vsync(1'b0),
         .i_hsync(1'b0),
         .i_de(gray_de),
@@ -76,7 +76,7 @@ module top_filter #(
         .H_RES(170)
     ) U_Sobel (
         .clk(clk),
-        .rstn(!reset),
+        .rstn(rstn),
         .i_vsync(1'b0),
         .i_hsync(1'b0),
         .i_de(gauss_de),
@@ -94,7 +94,7 @@ module top_filter #(
         .TH_LOW (250)
     ) U_Canny_Edge (
         .clk(clk),
-        .rstn(!reset),
+        .rstn(rstn),
         .i_vsync(1'b0),
         .i_hsync(1'b0),
         .i_de(sobel_de),
