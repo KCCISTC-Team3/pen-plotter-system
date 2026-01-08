@@ -4,7 +4,7 @@ def load_hex_txt_to_bytes(path: str) -> bytes:
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         text = f.read()
 
-    tokens = re.findall(r"\b(?:0x)?([0-9a-fA-F]{2})\b", text)
+    tokens = re.findall(r"(?:0x)?([0-9a-fA-F]{2})", text)
     if not tokens:
         raise ValueError("No hex byte tokens found in the txt file.")
 
