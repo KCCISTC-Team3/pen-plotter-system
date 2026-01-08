@@ -24,51 +24,51 @@ module TOP (
     logic       canny_de;
     logic [7:0] canny_data;
 
-    logic tx_fifo_full;
-    logic tx_push;
+    logic       tx_fifo_full;
+    logic       tx_push;
 
     top_uart_rx_logic U_TOP_UART_RX_LOGIC (
-        .clk(clk),
-        .reset(reset),
-        .rx(rx),
-        .rgb_data(write_rgb_data),
+        .clk       (clk),
+        .reset     (reset),
+        .rx        (rx),
+        .rgb_data  (write_rgb_data),
         .pixel_done(write_en),
-        .pixel_cnt(write_addr),
+        .pixel_cnt (write_addr),
         .frame_done(w_start_read)
     );
 
     rx_ram U_IMG_RAM (
-        .clk(clk),
-        .we(write_en),  //pixel_done
-        .wData(write_rgb_data),
-        .wAddr(write_addr),  //pixel_cnt
-        .frame_done(w_start_read),
+        .clk         (clk),
+        .we          (write_en),        //pixel_done
+        .wData       (write_rgb_data),
+        .wAddr       (write_addr),      //pixel_cnt
+        .frame_done  (w_start_read),
         .o_frame_done(start_read),
-        .oe(oe),  //read enable
-        .rAddr(read_addr),
-        .imgData(read_img_data)
+        .oe          (oe),              //read enable
+        .rAddr       (read_addr),
+        .imgData     (read_img_data)
     );
 
     top_filter #(
-        .WIDTH(8),
-        .H_RES(170),
+        .WIDTH         (8),
+        .H_RES         (170),
         .BRIGHTNESS_ADD(30),
         .BRIGHTNESS_SUB(30),
-        .TH_HIGH(230),
-        .TH_LOW(180)
+        .TH_HIGH       (230),
+        .TH_LOW        (180)
     ) U_TOP_FILTER (
-        .clk(clk),
-        .rstn(!reset),
-        .i_vsync(1'b0),
-        .i_hsync(1'b0),
-        .i_de(DE),
+        .clk     (clk),
+        .rstn    (!reset),
+        .i_vsync (1'b0),
+        .i_hsync (1'b0),
+        .i_de    (DE),
         .i_r_data(o_r),
         .i_g_data(o_g),
         .i_b_data(o_b),
-        .o_vsync(),
-        .o_hsync(),
-        .o_de(canny_de),
-        .o_data(canny_data)
+        .o_vsync (),
+        .o_hsync (),
+        .o_de    (canny_de),
+        .o_data  (canny_data)
     );
 
     /*Simple_DP_RAM U_FRAME_BUFFER (
@@ -82,24 +82,24 @@ module TOP (
         */
 
     ImgReader U_ImgReader (
-        .clk(clk),
-        .reset(reset),
+        .clk       (clk),
+        .reset     (reset),
         .start_read(start_read),
-        .img(read_img_data),
-        .addr(read_addr),
-        .re(oe),
-        .o_de(DE),
-        .r_port(o_r),
-        .g_port(o_g),
-        .b_port(o_b)
+        .img       (read_img_data),
+        .addr      (read_addr),
+        .re        (oe),
+        .o_de      (DE),
+        .r_port    (o_r),
+        .g_port    (o_g),
+        .b_port    (o_b)
     );
 
     top_uart_tx_logic U_TOP_UART_TX_LOGIC (
-        .clk(clk),
-        .reset(reset),
-        .canny_de(canny_de),
+        .clk       (clk),
+        .reset     (reset),
+        .canny_de  (canny_de),
         .canny_data(canny_data),
-        .tx(tx)
+        .tx        (tx)
     );
 
 endmodule
@@ -170,6 +170,5 @@ module imgRom (
 
     always_ff @(posedge clk) begin
         data <= mem[addr[7:0]];
-
     end
 endmodule

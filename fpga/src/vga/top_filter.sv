@@ -51,50 +51,50 @@ module top_filter #(
         .BRIGHTNESS_ADD(0),
         .BRIGHTNESS_SUB(0)
     ) U_DS_Gray (
-        .clk(clk),
-        .rstn(rstn),
-        .i_vsync(i_vsync),
-        .i_hsync(i_hsync),
-        .i_de(i_de),
+        .clk     (clk),
+        .rstn    (rstn),
+        .i_vsync (i_vsync),
+        .i_hsync (i_hsync),
+        .i_de    (i_de),
         .i_r_data(i_r_data),
         .i_g_data(i_g_data),
         .i_b_data(i_b_data),
-        .o_vsync(gray_vsync),
-        .o_hsync(gray_hsync),
-        .o_de(gray_de),  // 1clk delay
-        .o_data(gray_data)
+        .o_vsync (gray_vsync),
+        .o_hsync (gray_hsync),
+        .o_de    (gray_de),     // 1clk delay
+        .o_data  (gray_data)
     );
 
     Gaussian #(
         .WIDTH(8),
         .H_RES(170)
     ) U_Gaussian (
-        .clk(clk),
-        .rstn(rstn),
+        .clk    (clk),
+        .rstn   (rstn),
         .i_vsync(gray_vsync),
         .i_hsync(gray_hsync),
-        .i_de(gray_de),
-        .i_data(gray_data),
+        .i_de   (gray_de),
+        .i_data (gray_data),
         .o_vsync(gauss_vsync),
         .o_hsync(gauss_hsync),
-        .o_de(gauss_de),  // 2clk delay
-        .o_data(gauss_data)
+        .o_de   (gauss_de),     // 2clk delay
+        .o_data (gauss_data)
     );
 
     Sobel #(
         .WIDTH(8),
         .H_RES(170)
     ) U_Sobel (
-        .clk(clk),
-        .rstn(rstn),
+        .clk    (clk),
+        .rstn   (rstn),
         .i_vsync(gauss_vsync),
         .i_hsync(gauss_hsync),
-        .i_de(gauss_de),
-        .i_data(gauss_data),
+        .i_de   (gauss_de),
+        .i_data (gauss_data),
         .o_vsync(sobel_vsync),
         .o_hsync(sobel_hsync),
-        .o_de(sobel_de),  // 3clk delay
-        .o_data(sobel_data)
+        .o_de   (sobel_de),     // 3clk delay
+        .o_data (sobel_data)
     );
 
     Canny_Edge #(
@@ -103,16 +103,16 @@ module top_filter #(
         .TH_HIGH(255),
         .TH_LOW (250)
     ) U_Canny_Edge (
-        .clk(clk),
-        .rstn(rstn),
+        .clk    (clk),
+        .rstn   (rstn),
         .i_vsync(sobel_vsync),
         .i_hsync(sobel_hsync),
-        .i_de(sobel_de),
-        .i_data(sobel_data),
+        .i_de   (sobel_de),
+        .i_data (sobel_data),
         .o_vsync(canny_vsync),
         .o_hsync(canny_hsync),
-        .o_de(canny_de),  // 350clk delay
-        .o_data(canny_data)
+        .o_de   (canny_de),     // 350clk delay
+        .o_data (canny_data)
     );
 
 endmodule

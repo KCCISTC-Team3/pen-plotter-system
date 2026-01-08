@@ -264,7 +264,6 @@ module Canny_Edge #(
     end
 
     // Final Assignment
-    // Canny Output은 Grayscale이므로 RGB에 동일 값 복사
     assign o_data = final_out;
 
 endmodule
