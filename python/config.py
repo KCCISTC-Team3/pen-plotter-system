@@ -1,7 +1,7 @@
 # Configuration parameters for the pen plotter system
 
 # Image dimensions and payload length
-W, H = 170, 240
+W, H = 172, 240
 PAYLOAD_LEN = (W * H) // 8  # 5160 bytes
 
 # FPGA communication settings

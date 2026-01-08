@@ -50,6 +50,7 @@ endmodule
 
 module tx_ram (
     input  logic        clk,
+    input  logic        reset,
     input  logic        we, //canny_en
     input  logic [7:0]  wData, //canny_data[0]
     input  logic [$clog2(30*172)-1:0] wAddr, //addr_cnt
@@ -67,6 +68,8 @@ module tx_ram (
     always_ff @(posedge clk) begin
         if (we) mem[wAddr] <= wData;
     end
+
+    assign rData = mem[rAddr_cnt];
     
     always_ff @(posedge clk) begin
         if(reset) begin
@@ -82,18 +85,15 @@ module tx_ram (
                 end
             end 
             else begin
-                rAddr_cnt <= rAddr_cnt + 1;
+                rAddr_cnt <= rAddr_cnt;
             end
         end
     end
 
     always_ff @(posedge clk) begin
-        if(frame_tick) begin
-            frame_done <= 1;
-        end
-        else if (!we) begin
+        if(reset) begin
             frame_done <= 0;
-        end
+        end 
         else begin
             if(frame_tick) begin
                 frame_done <= 1;

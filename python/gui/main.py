@@ -59,8 +59,8 @@ class PortConfigDialog(QDialog):
 class MainWindow(QMainWindow):
     def __init__(self, port):
         super().__init__()
-        # 해상도 170x240 고정 (총 40,800 픽셀)
-        self.TARGET_W, self.TARGET_H = 170, 240
+        # 해상도 172x240 고정 (총 40,800 픽셀)
+        self.TARGET_W, self.TARGET_H = 172, 240
 
         screen_geo = QApplication.primaryScreen().availableGeometry()
         display_h = int(screen_geo.height() * 0.52)
