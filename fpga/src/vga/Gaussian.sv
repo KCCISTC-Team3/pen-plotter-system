@@ -90,8 +90,8 @@ module Gaussian #(
     // 1 2 1  -> Sum total 16 (Divide by 16 using >> 4)
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
-            sum <= 0;
-            o_data <= 0;
+            sum     <= 0;
+            o_data  <= 0;
         end else if (i_de) begin // 데이터가 유효할 때만 연산 갱신
             // Stage 1: 가중치 합 계산 (Shift 연산으로 최적화)
             sum <= (p11) + (p12 << 1) + (p13) +
