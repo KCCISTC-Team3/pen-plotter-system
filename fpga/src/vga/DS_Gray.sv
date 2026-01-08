@@ -24,7 +24,7 @@ module DS_Gray #(
     parameter WIDTH = 8,
     parameter BRIGHTNESS_ADD = 30,
     parameter BRIGHTNESS_SUB = 30
-)(
+) (
     input  logic             clk,
     input  logic             rstn,
     input  logic             i_vsync,
@@ -36,9 +36,7 @@ module DS_Gray #(
     output logic             o_vsync,
     output logic             o_hsync,
     output logic             o_de,
-    output logic [WIDTH-1:0] o_r_data,
-    output logic [WIDTH-1:0] o_g_data,
-    output logic [WIDTH-1:0] o_b_data
+    output logic [WIDTH-1:0] o_data
 );
 
     logic        [WIDTH+7:0] r_sum, g_sum, b_sum;
@@ -49,20 +47,18 @@ module DS_Gray #(
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
-            v_delay      <= '0;
-            h_delay      <= '0;
-            d_delay      <= '0;
-            r_sum        <= '0;
-            g_sum        <= '0;
-            b_sum        <= '0;
-            gray_sum     <= '0;
-            gray_bright  <= '0;
-            o_r_data     <= '0;
-            o_g_data     <= '0;
-            o_b_data     <= '0;
-            o_vsync      <= '0;
-            o_hsync      <= '0;
-            o_de         <= '0;
+            v_delay     <= '0;
+            h_delay     <= '0;
+            d_delay     <= '0;
+            r_sum       <= '0;
+            g_sum       <= '0;
+            b_sum       <= '0;
+            gray_sum    <= '0;
+            gray_bright <= '0;
+            o_data      <= '0;
+            o_vsync     <= '0;
+            o_hsync     <= '0;
+            o_de        <= '0;
         end else begin
             v_delay <= {v_delay[1:0], i_vsync};
             h_delay <= {h_delay[1:0], i_hsync};
@@ -75,21 +71,16 @@ module DS_Gray #(
             gray_sum <= (r_sum + g_sum + b_sum) >> 8;
 
             if (d_delay[1]) begin
-                 gray_bright <= $signed({1'b0, gray_sum}) + BRIGHTNESS_ADD - BRIGHTNESS_SUB;
+                gray_bright <= $signed({1'b0, gray_sum}) + BRIGHTNESS_ADD -
+                    BRIGHTNESS_SUB;
             end
 
             if (gray_bright > 255) begin
-                o_r_data <= 8'hFF;
-                o_g_data <= 8'hFF;
-                o_b_data <= 8'hFF;
+                o_data <= 8'hFF;
             end else if (gray_bright < 0) begin
-                o_r_data <= 8'h00;
-                o_g_data <= 8'h00;
-                o_b_data <= 8'h00;
+                o_data <= 8'h00;
             end else begin
-                o_r_data <= gray_bright[7:0];
-                o_g_data <= gray_bright[7:0];
-                o_b_data <= gray_bright[7:0];
+                o_data <= gray_bright[7:0];
             end
 
             o_vsync <= v_delay[2];

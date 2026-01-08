@@ -30,15 +30,11 @@ module Canny_Edge #(
     input  logic             i_vsync,
     input  logic             i_hsync,
     input  logic             i_de,
-    input  logic [WIDTH-1:0] i_r_data, // [Input] Grayscale Pixel Data
-    input  logic [WIDTH-1:0] i_g_data, // [Input] Ignored (Use R for Gray)
-    input  logic [WIDTH-1:0] i_b_data, // [Input] Ignored
+    input  logic [WIDTH-1:0] i_data, // [Input] Grayscale Pixel Data
     output logic             o_vsync,
     output logic             o_hsync,
     output logic             o_de,
-    output logic [WIDTH-1:0] o_r_data, // [Output] Final Edge
-    output logic [WIDTH-1:0] o_g_data,
-    output logic [WIDTH-1:0] o_b_data
+    output logic [WIDTH-1:0] o_data
 );
 
     //==========================================================================
@@ -60,7 +56,7 @@ module Canny_Edge #(
             s1_valid <= 0;
         end else if (i_de) begin
             // 1. Line Buffer Write/Shift
-            lb1_row0[col_cnt1] <= i_r_data;       // Current Line -> Row 0 (logic reversal for simplicity)
+            lb1_row0[col_cnt1] <= i_data;       // Current Line -> Row 0 (logic reversal for simplicity)
             lb1_row1[col_cnt1] <= lb1_row0[col_cnt1]; // Row 0 -> Row 1
             
             // 2. Window Shift (3x3)
@@ -69,7 +65,7 @@ module Canny_Edge #(
             // Row 1 (Middle)
             s1_p23 <= lb1_row0[col_cnt1]; s1_p22 <= s1_p23; s1_p21 <= s1_p22;
             // Row 2 (Bottom - Current Input)
-            s1_p33 <= i_r_data;           s1_p32 <= s1_p33; s1_p31 <= s1_p32;
+            s1_p33 <= i_data;             s1_p32 <= s1_p33; s1_p31 <= s1_p32;
 
             // 3. Control
             if (col_cnt1 == H_RES-1) col_cnt1 <= 0;
@@ -269,8 +265,6 @@ module Canny_Edge #(
 
     // Final Assignment
     // Canny Output은 Grayscale이므로 RGB에 동일 값 복사
-    assign o_r_data = final_out;
-    assign o_g_data = final_out;
-    assign o_b_data = final_out;
+    assign o_data = final_out;
 
 endmodule
