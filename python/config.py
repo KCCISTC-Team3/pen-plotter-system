@@ -16,5 +16,5 @@ PIXEL_TO_MM = 0.5
 STEP_MM = 0.2
 
 # File paths
-RECEIVE_PATH = "received_data.bin"
-COMMAND_PATH = "commands.txt"
+RECEIVE_PATH = "./sample/test_image1.txt"
+COMMAND_PATH = "./sample/out_commands.txt"
