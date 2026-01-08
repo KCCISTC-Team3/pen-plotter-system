@@ -98,7 +98,7 @@ module TOP (
         .clk       (clk),
         .reset     (reset),
         .canny_de  (canny_de),
-        .canny_data(canny_data),
+        .canny_r   (canny_data),
         .tx        (tx)
     );
 
