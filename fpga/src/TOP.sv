@@ -11,11 +11,11 @@ module TOP (
     logic                       w_start_read;
     wire                        oe;
 
-    logic [$clog2(240*170)-1:0] write_addr;
+    logic [$clog2(480*640)-1:0] write_addr;
     logic [               23:0] write_rgb_data;
     logic                       write_en;
 
-    logic [$clog2(240*170)-1:0] read_addr;
+    logic [$clog2(480*640)-1:0] read_addr;
     logic [               23:0] read_img_data;
     logic                       DE;
 
@@ -148,7 +148,7 @@ module ImgReader (
         end
     end
 
-    assign addr = reading ? (y_cnt * 170 + x_cnt) : 'h0;
+    assign addr = reading ? (y_cnt * 640 + x_cnt) : 'h0;
 
     always_ff @(posedge clk) begin
         re   <= reading;
@@ -163,7 +163,7 @@ endmodule
 
 module imgRom (
     input  logic                       clk,
-    input  logic [$clog2(170*240)-1:0] addr,
+    input  logic [$clog2(640*480)-1:0] addr,
     output logic [               23:0] data
 );
     logic [23:0] mem[0:255];

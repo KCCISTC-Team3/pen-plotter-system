@@ -22,7 +22,7 @@
 
 module Gaussian #(
     parameter WIDTH = 8,
-    parameter H_RES = 170
+    parameter H_RES = 640
 )(
     input  logic             clk,
     input  logic             rstn,
