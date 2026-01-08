@@ -4,7 +4,7 @@ module pixel_8_fsm (
     input clk,
     input reset,
     input canny_de,
-    input [7:0] canny_r,
+    input [7:0] canny_data,
     output we,
     output [7:0] wData,
     output [$clog2(5100)-1:0] wAddr,
@@ -64,14 +64,14 @@ always @(*) begin
         ST_IDLE: begin
             if (canny_de) begin
                 next_state = ST_DATA;
-                wData_next[pixel_cnt_reg] = canny_r[0]; 
+                wData_next[pixel_cnt_reg] = canny_data[0]; 
                 pixel_cnt_next = pixel_cnt_reg + 1;
             end
         end
 
         ST_DATA: begin
             if (canny_de) begin
-                wData_next[pixel_cnt_reg] = canny_r[0]; 
+                wData_next[pixel_cnt_reg] = canny_data[0]; 
                 pixel_cnt_next = pixel_cnt_reg + 1;
 
                 if (pixel_cnt_reg == 3'b111) begin
@@ -92,7 +92,7 @@ always @(*) begin
             next_state = ST_IDLE;
 
             if (canny_de) begin
-                wData_next[pixel_cnt_reg] = canny_r[0]; 
+                wData_next[pixel_cnt_reg] = canny_data[0]; 
                 pixel_cnt_next = pixel_cnt_reg + 1;
             end
         end

@@ -4,66 +4,74 @@ module TOP (
     input  logic clk,
     input  logic reset,
     input  logic rx,
-    output logic tx 
+    output logic tx
 );
 
-        
-        logic        start_read;
-        logic       w_start_read;
-        wire        oe;
+    logic                       start_read;
+    logic                       w_start_read;
+    wire                        oe;
 
-        logic [$clog2(240*170)-1:0] write_addr;
-        logic [23:0] write_rgb_data;
-        logic        write_en;
+    logic [$clog2(240*170)-1:0] write_addr;
+    logic [               23:0] write_rgb_data;
+    logic                       write_en;
 
-        logic [$clog2(240*170)-1:0] read_addr;
-        logic [23:0] read_img_data;
-        logic        DE;
+    logic [$clog2(240*170)-1:0] read_addr;
+    logic [               23:0] read_img_data;
+    logic                       DE;
 
+    logic [7:0] o_r, o_g, o_b;
 
-        logic [7:0]  o_r, o_g, o_b;
+    logic       canny_de;
+    logic [7:0] canny_data;
 
-        logic        gray_de;
-        logic [7:0]  gray_r, gray_g, gray_b;
+    logic tx_fifo_full;
+    logic tx_push;
 
-        logic        gauss_de;
-        logic [7:0]  gauss_r, gauss_g, gauss_b;
+    top_uart_rx_logic U_TOP_UART_RX_LOGIC (
+        .clk(clk),
+        .reset(reset),
+        .rx(rx),
+        .rgb_data(write_rgb_data),
+        .pixel_done(write_en),
+        .pixel_cnt(write_addr),
+        .frame_done(w_start_read)
+    );
 
-        logic        sobel_de;
-        logic [7:0]  sobel_r, sobel_g, sobel_b;
+    rx_ram U_IMG_RAM (
+        .clk(clk),
+        .we(write_en),  //pixel_done
+        .wData(write_rgb_data),
+        .wAddr(write_addr),  //pixel_cnt
+        .frame_done(w_start_read),
+        .o_frame_done(start_read),
+        .oe(oe),  //read enable
+        .rAddr(read_addr),
+        .imgData(read_img_data)
+    );
 
-        logic        canny_de;
-        logic [7:0]  canny_r, canny_g, canny_b;
+    top_filter #(
+        .WIDTH(8),
+        .H_RES(640),
+        .BRIGHTNESS_ADD(30),
+        .BRIGHTNESS_SUB(30),
+        .TH_HIGH(230),
+        .TH_LOW(180)
+    ) U_TOP_FILTER (
+        .clk(clk),
+        .rstn(!reset),
+        .i_vsync(1'b0),
+        .i_hsync(1'b0),
+        .i_de(DE),
+        .i_r_data(o_r),
+        .i_g_data(o_g),
+        .i_b_data(o_b),
+        .o_vsync(),
+        .o_hsync(),
+        .o_de(canny_de),
+        .o_data(canny_data)
+    );
 
-        logic        tx_fifo_full;
-        logic        tx_push;
-
-        top_uart_rx_logic U_TOP_UART_RX_LOGIC (
-            .clk(clk),
-            .reset(reset),
-            .rx(rx),
-            .rgb_data(write_rgb_data),
-            .pixel_done(write_en),
-            .pixel_cnt(write_addr),
-            .frame_done(w_start_read)
-        );
-
-
-        rx_ram U_IMG_RAM(
-           .clk(clk),
-           .we(write_en), //pixel_done
-           .wData(write_rgb_data), 
-           .wAddr(write_addr), //pixel_cnt
-           .frame_done(w_start_read),
-           .o_frame_done(start_read),
-           .oe(oe), //read enable
-           .rAddr(read_addr),
-           .imgData(read_img_data)
-        );
-
-
-
-        /*Simple_DP_RAM U_FRAME_BUFFER (
+    /*Simple_DP_RAM U_FRAME_BUFFER (
             .clk(clk),
             .we(write_en),
             .waddr(write_addr),
@@ -73,127 +81,53 @@ module TOP (
         );
         */
 
-        ImgReader U_ImgReader (
-            .clk(clk),
-            .reset(reset),
-            .start_read(start_read),
-            .img(read_img_data),
-            .addr(read_addr),
-            .re(oe),
-            .o_de(DE),
-            .r_port(o_r),
-            .g_port(o_g),
-            .b_port(o_b)
-        );
+    ImgReader U_ImgReader (
+        .clk(clk),
+        .reset(reset),
+        .start_read(start_read),
+        .img(read_img_data),
+        .addr(read_addr),
+        .re(oe),
+        .o_de(DE),
+        .r_port(o_r),
+        .g_port(o_g),
+        .b_port(o_b)
+    );
 
-
-
-        DS_Gray #(
-            .WIDTH(8),
-            .BRIGHTNESS_ADD(0),
-            .BRIGHTNESS_SUB(0)
-        ) U_DS_Gray (
-            .clk(clk),
-            .rstn(!reset),
-            .i_vsync(1'b0), 
-            .i_hsync(1'b0),
-            .i_de(DE),
-            .i_r_data(o_r), .i_g_data(o_g), .i_b_data(o_b),
-            .o_vsync(),
-            .o_hsync(),
-            .o_de(gray_de), // 1clk delay
-            .o_r_data(gray_r), .o_g_data(gray_g), .o_b_data(gray_b)
-        );
-
-        Gaussian #(
-            .WIDTH(8),
-            .H_RES(170)
-        ) U_Gaussian (
-            .clk(clk),
-            .rstn(!reset),
-            .i_vsync(1'b0),
-            .i_hsync(1'b0),
-            .i_de(gray_de),
-            .i_r_data(gray_r), .i_g_data(gray_g), .i_b_data(gray_b),
-            .o_vsync(),
-            .o_hsync(),
-            .o_de(gauss_de), // 2clk delay
-            .o_r_data(gauss_r), .o_g_data(gauss_g), .o_b_data(gauss_b)
-        );
-
-        Sobel #(
-            .WIDTH(8),
-            .H_RES(170)
-        ) U_Sobel (
-            .clk(clk),
-            .rstn(!reset),
-            .i_vsync(1'b0),
-            .i_hsync(1'b0),
-            .i_de(gauss_de),
-            .i_r_data(gauss_r), .i_g_data(gauss_g), .i_b_data(gauss_b),
-            .o_vsync(),
-            .o_hsync(),
-            .o_de(sobel_de), // 3clk delay
-            .o_r_data(sobel_r), .o_g_data(sobel_g), .o_b_data(sobel_b)
-        );
-
-        Canny_Edge #(
-            .WIDTH(8),
-            .H_RES(170),
-            .TH_HIGH(255),
-            .TH_LOW(250)
-        ) U_Canny_Edge (
-            .clk(clk),
-            .rstn(!reset),
-            .i_vsync(1'b0),
-            .i_hsync(1'b0),
-            .i_de(sobel_de),
-            .i_r_data(sobel_r), .i_g_data(sobel_g), .i_b_data(sobel_b),
-            .o_vsync(),
-            .o_hsync(),
-            .o_de(canny_de), // 350clk delay
-            .o_r_data(canny_r), .o_g_data(canny_g), .o_b_data(canny_b)
-        );
-
-
-
-        top_uart_tx_logic U_TOP_UART_TX_LOGIC(
-            .clk(clk),
-            .reset(reset),
-            .canny_de(canny_de),
-            .canny_r(canny_r),
-            .tx(tx)
-        );
-
-
+    top_uart_tx_logic U_TOP_UART_TX_LOGIC (
+        .clk(clk),
+        .reset(reset),
+        .canny_de(canny_de),
+        .canny_data(canny_data),
+        .tx(tx)
+    );
 
 endmodule
 
-
-module ImgReader(
-    input  logic         clk,
-    input  logic         reset,
-    input  logic         start_read,  
-    input  logic [23:0]  img,         
-    output logic [15:0]  addr,        
-    output logic         o_de,
-    output logic         re,        
-    output logic [7:0]   r_port,
-    output logic [7:0]   g_port,
-    output logic [7:0]   b_port
+module ImgReader (
+    input  logic        clk,
+    input  logic        reset,
+    input  logic        start_read,
+    input  logic [23:0] img,
+    output logic [15:0] addr,
+    output logic        o_de,
+    output logic        re,
+    output logic [ 7:0] r_port,
+    output logic [ 7:0] g_port,
+    output logic [ 7:0] b_port
 );
 
-    logic [7:0] x_cnt; // 0~169 카운터
-    logic [7:0] y_cnt; // 0~239 카운터
-    logic       reading;
+    logic [ 7:0] x_cnt;  // 0~169 카운터
+    logic [ 7:0] y_cnt;  // 0~239 카운터
+    logic        reading;
     logic [23:0] reg_rgb_data;
 
-    
+
     always_ff @(posedge clk) begin
         if (reset) begin
             reading <= 1'b0;
         end else if (start_read) begin
-            reading <= 1'b1; 
+            reading <= 1'b1;
         end else if (x_cnt == 169 && y_cnt == 239) begin
             reading <= 1'b0;
         end
@@ -214,30 +148,28 @@ module ImgReader(
         end
     end
 
- 
- 
     assign addr = reading ? (y_cnt * 170 + x_cnt) : 'h0;
- 
+
     always_ff @(posedge clk) begin
-        re <= reading;
+        re   <= reading;
         o_de <= re;
     end
 
-    assign reg_rgb_data  = re ? {img[23:16], img[15:8], img[7:0]} : 'b0;
-    assign {r_port, g_port, b_port} = o_de? reg_rgb_data : 'b0;
-   
+    assign reg_rgb_data = re ? {img[23:16], img[15:8], img[7:0]} : 'b0;
+    assign {r_port, g_port, b_port} = o_de ? reg_rgb_data : 'b0;
+
 
 endmodule
 
 module imgRom (
-    input  logic                        clk,
-    input  logic [$clog2(170*240)-1:0]  addr,
-    output logic [23:0]                 data
+    input  logic                       clk,
+    input  logic [$clog2(170*240)-1:0] addr,
+    output logic [               23:0] data
 );
-    logic [23:0] mem [0:255]; 
+    logic [23:0] mem[0:255];
 
     always_ff @(posedge clk) begin
         data <= mem[addr[7:0]];
-        
+
     end
 endmodule

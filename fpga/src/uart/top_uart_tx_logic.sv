@@ -2,7 +2,7 @@ module top_uart_tx_logic(
     input clk,
     input reset,
     input canny_de,
-    input [7:0] canny_r,
+    input [7:0] canny_data,
     output tx
 
 );
@@ -19,7 +19,7 @@ module top_uart_tx_logic(
         .clk(clk),
         .reset(reset),
         .canny_de(canny_de),
-        .canny_r(canny_r),
+        .canny_data(canny_data),
         .we(we),
         .wData(wData),
         .wAddr(wAddr),

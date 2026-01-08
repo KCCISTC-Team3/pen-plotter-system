@@ -11,8 +11,7 @@ from packet_gen import *
 
 def main():
     ## Load raw bytes from hex text file (test only)
-    # raw_bytes = load_hex_txt_to_bytes("./contour_optimization/binary_dump_test.txt")
-    raw_bytes = load_hex_txt_to_bytes("./contour_optimization/binary_dump_test_complex.txt")
+    raw_bytes = load_hex_txt_to_bytes(RECEIVE_PATH)
 
     ## Payload extraction after 0xAA
     payload = extract_payload_after_header(raw_bytes, header=0xAA, payload_len=PAYLOAD_LEN)
@@ -73,8 +72,8 @@ def main():
     for line in cmds[:50]:
         print(line.strip())
 
-    # Optional: save for inspection
-    with open("commands.txt", "w", encoding="utf-8") as f:
+    # Save STM commands
+    with open(COMMAND_PATH, "w", encoding="utf-8") as f:
         f.writelines(cmds)
         
     ## Visualization: original binary, overlay, optimized with pen-up links
