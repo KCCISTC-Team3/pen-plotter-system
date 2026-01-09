@@ -1,0 +1,6 @@
+../Core/driver/servo/servo.c:9:6:Servo_Init	1
+../Core/driver/servo/servo.c:14:6:Servo_SetAngle	2
+../Core/driver/servo/servo.c:27:6:Servo_Set_0	1
+../Core/driver/servo/servo.c:31:6:Servo_Set_90	1
+../Core/driver/servo/servo.c:35:6:Servo_Set_180	1
+../Core/driver/servo/servo.c:39:6:Servo_Stop	1

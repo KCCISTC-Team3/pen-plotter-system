@@ -1,0 +1,2 @@
+../Core/ap/Controller/Controller_Plotter.c:27:6:Controller_Plotter_Init	4	static
+../Core/ap/Controller/Controller_Plotter.c:33:6:Controller_Plotter_Execute	104	static

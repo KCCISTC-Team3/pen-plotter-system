@@ -24,7 +24,12 @@ C_DEPS :=
 SUBDIRS := \
 Core/Src \
 Core/Startup \
-Core/Survo \
+Core/ap/Common \
+Core/ap/Controller \
+Core/ap/Listener \
+Core/ap/Presenter \
+Core/driver/servo \
+Core/driver/step_motor \
 Drivers/STM32F4xx_HAL_Driver/Src \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
 Middlewares/Third_Party/FreeRTOS/Source \

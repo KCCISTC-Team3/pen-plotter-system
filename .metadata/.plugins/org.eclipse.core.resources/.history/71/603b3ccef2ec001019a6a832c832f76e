@@ -1,0 +1,6 @@
+../Core/driver/step_motor/step_motor.c:14:6:Step_Init	1
+../Core/driver/step_motor/step_motor.c:36:6:Step_Set_ARR	1
+../Core/driver/step_motor/step_motor.c:41:6:Step_Start	1
+../Core/driver/step_motor/step_motor.c:46:6:Step_Stop	1
+../Core/driver/step_motor/step_motor.c:50:6:Step_Set_StepPin	3
+../Core/driver/step_motor/step_motor.c:56:6:Step_Set_DirPin	3
