@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
     def __init__(self, port):
         super().__init__()
         # 해상도 WxH 고정 (총 40,800 픽셀)
-        self.TARGET_W, self.TARGET_H = 170, 240
+        self.TARGET_W, self.TARGET_H = 172, 240
 
         screen_geo = QApplication.primaryScreen().availableGeometry()
         display_h = int(screen_geo.height() * 0.52)
@@ -250,7 +250,7 @@ class MainWindow(QMainWindow):
                     QApplication.processEvents()
                     time.sleep(0.01)
 
-                expected_bytes = total_pixels * 3
+                expected_bytes = 41280
                 received_raw = ser.read(expected_bytes)
 
                 # [C] 수신 데이터를 .mem 파일로 일자 저장
