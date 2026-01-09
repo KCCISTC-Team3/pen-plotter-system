@@ -55,7 +55,7 @@ module tb_tx_fsm_ram;
         repeat (41280) begin
             @(posedge clk);
             canny_de <= 1'b1;
-            canny_r  <= $random;   // ?ë¸˜è‡¾? ?ëœ²?ì” ?ê½£
+            canny_r  <= $random;   // ?•„ë¬? ?°?´?„°
         end
 
         // stop sending

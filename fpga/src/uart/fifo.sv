@@ -155,15 +155,19 @@ module fifo_cu (
                     full_next = 1'b1;
             end
 
-            2'b11: begin // PUSH + POP ë™ì‹œì— (ë‘˜ ë‹¤ ê°€ëŠ¥í•˜ë‹¤ê³  ë³´ì¥ë¨)
+            2'b11: begin // PUSH + POP µ¿½Ã¿¡ (µÑ ´Ù °¡´ÉÇÏ´Ù°í º¸ÀåµÊ)
+                // µ¿½Ã¿¡ ÇÑ Ä­¾¿ ÀÌµ¿ÇÏ¸é occupancy´Â µ¿ÀÏ
                 wptr_next = wptr_reg + 3'd1;
                 rptr_next = rptr_reg + 3'd1;
+
+                // µ¿½Ã¿¡ ÀÏ¾î³ª¸é "full/empty °æ°è"¿¡¼­ ºüÁ®³ª¿À´Â È¿°ú¸¸ ÀÖÀ½
+                // (push_en/pop_enÀÌ ÀÌ¹Ì full/empty¸¦ °í·ÁÇØ¼­ µé¾î¿À¹Ç·Î)
                 full_next  = 1'b0;
                 empty_next = 1'b0;
             end
 
             default: begin
-                // 2'b00 : ì•„ë¬´ ë™ì‘ ì—†ìŒ
+                // 2'b00 : ¾Æ¹« µ¿ÀÛ ¾øÀ½
             end
 
         endcase
