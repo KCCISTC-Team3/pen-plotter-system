@@ -11,7 +11,7 @@ module tb_tx_fsm_ram;
     wire tx;
 
 
-    
+    /*
     uart_tx_fifo dut (
         .clk         (clk),
         .reset       (reset),
@@ -19,6 +19,15 @@ module tb_tx_fsm_ram;
         .push        (canny_de),
         .tx          (tx),
         .tx_fifo_full()
+    );
+    */
+    
+    top_uart_tx_logic dut (
+        .clk       (clk),
+        .reset     (reset),
+        .canny_de  (canny_de),
+        .canny_data(canny_r),
+        .tx        (tx)
     );
     
 
@@ -43,7 +52,7 @@ module tb_tx_fsm_ram;
         reset = 1'b0;
 
         // 32 cycles data send
-        repeat (40800) begin
+        repeat (41280) begin
             @(posedge clk);
             canny_de <= 1'b1;
             canny_r  <= $random;   // ?•„ë¬? ?°?´?„°

@@ -31,7 +31,7 @@ module fifo (
     output       empty
 );
 
-    wire [4:0] w_wptr, w_rptr;
+    wire [2:0] w_wptr, w_rptr;
 
     wire push_en = push & ~full;
     wire pop_en  = pop  & ~empty;
@@ -65,15 +65,15 @@ endmodule
 module register_file (
     input        clk,
     input        rst,
-    input  [4:0] wptr,
-    input  [4:0] rptr,
+    input  [2:0] wptr,
+    input  [2:0] rptr,
     input  [7:0] push_data,
     input        wr,
     input        pop_en,        // ? pop && !empty
     output [7:0] pop_data
 );
 
-    reg [7:0] ram[0:31];
+    reg [7:0] ram[0:7];
     reg [7:0] pop_data_reg;
 
     assign pop_data = pop_data_reg;
@@ -95,15 +95,15 @@ module fifo_cu (
     input        rst,
     input        push_en,   // = push & ~full
     input        pop_en,    // = pop  & ~empty
-    output [4:0] wptr,
-    output [4:0] rptr,
+    output [2:0] wptr,
+    output [2:0] rptr,
     output       full,
     output       empty
 );
 
     // state regs
-    reg [4:0] wptr_reg, wptr_next;
-    reg [4:0] rptr_reg, rptr_next;
+    reg [2:0] wptr_reg, wptr_next;
+    reg [2:0] rptr_reg, rptr_next;
     reg       full_reg, full_next;
     reg       empty_reg, empty_next;
 
@@ -138,27 +138,27 @@ module fifo_cu (
         case ({push_en, pop_en})
 
             2'b01: begin // POP only (guaranteed not empty)
-                rptr_next  = rptr_reg + 5'd1;
+                rptr_next  = rptr_reg + 3'd1;
                 full_next  = 1'b0;
 
                 // after pop, if read catches up to write -> empty
-                if (wptr_reg == (rptr_reg + 5'd1))
+                if (wptr_reg == (rptr_reg + 3'd1))
                     empty_next = 1'b1;
             end
 
             2'b10: begin // PUSH only (guaranteed not full)
-                wptr_next  = wptr_reg + 5'd1;
+                wptr_next  = wptr_reg + 3'd1;
                 empty_next = 1'b0;
 
                 // after push, if write catches up to read -> full (1-slot-empty ring)
-                if ((wptr_reg + 5'd1) == rptr_reg)
+                if ((wptr_reg + 3'd1) == rptr_reg)
                     full_next = 1'b1;
             end
 
             2'b11: begin // PUSH + POP 동시에 (둘 다 가능하다고 보장됨)
                 // 동시에 한 칸씩 이동하면 occupancy는 동일
-                wptr_next = wptr_reg + 5'd1;
-                rptr_next = rptr_reg + 5'd1;
+                wptr_next = wptr_reg + 3'd1;
+                rptr_next = rptr_reg + 3'd1;
 
                 // 동시에 일어나면 "full/empty 경계"에서 빠져나오는 효과만 있음
                 // (push_en/pop_en이 이미 full/empty를 고려해서 들어오므로)

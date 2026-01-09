@@ -39,7 +39,7 @@ class PaintCanvas(QWidget):
 
             if self.tool_mode == 'pen':
                 color = Qt.GlobalColor.black
-                size = 5
+                size = 1
             else:  # 지우개 모드
                 color = Qt.GlobalColor.white
                 size = 30  # 지우개는 좀 더 크게 설정

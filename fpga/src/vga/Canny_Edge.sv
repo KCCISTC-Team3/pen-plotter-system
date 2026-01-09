@@ -198,16 +198,16 @@ module Canny_Edge #(
         case (center_dir)
             2'd0: begin // Vertical Edge (좌우 Gradient? No, Direction Logic에 따름)
                   // 위 Logic에서 0은 Vertical Edge -> 좌우 픽셀 비교
-                  if (m22 >= m21 && m22 >= m23) nms_pixel = m22;
+                  if (m22 >= m21 && m22 > m23) nms_pixel = m22;
             end
             2'd1: begin // Diagonal (Top-Right / Bot-Left)
-                  if (m22 >= m13 && m22 >= m31) nms_pixel = m22;
+                  if (m22 >= m13 && m22 > m31) nms_pixel = m22;
             end
             2'd2: begin // Horizontal Edge -> 상하 픽셀 비교
-                  if (m22 >= m12 && m22 >= m32) nms_pixel = m22;
+                  if (m22 >= m12 && m22 > m32) nms_pixel = m22;
             end
             2'd3: begin // Diagonal (Top-Left / Bot-Right)
-                  if (m22 >= m11 && m22 >= m33) nms_pixel = m22;
+                  if (m22 >= m11 && m22 > m33) nms_pixel = m22;
             end
             default: nms_pixel = 0;
         endcase

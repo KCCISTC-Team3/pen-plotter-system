@@ -100,8 +100,8 @@ module top_filter #(
     Canny_Edge #(
         .WIDTH  (8),
         .H_RES  (172),
-        .TH_HIGH(255),
-        .TH_LOW (250)
+        .TH_HIGH(250),
+        .TH_LOW (120)
     ) U_Canny_Edge (
         .clk    (clk),
         .rstn   (rstn),
