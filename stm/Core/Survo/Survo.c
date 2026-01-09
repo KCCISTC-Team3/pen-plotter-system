@@ -17,6 +17,7 @@ void Survo_Init()
 
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, CENTER_PULSE);
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	//test teset
 
 	isInit = 1;
 	cur_angle = 90;
