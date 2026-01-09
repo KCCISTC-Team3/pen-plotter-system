@@ -14,11 +14,11 @@ from io_utils.stm32_uart import STM32UartManager
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, fpga_port, stm_port):  # main.py에서 넘겨준 2개의 포트를 받음
+    def __init__(self, fpga_port, stm_port):
         super().__init__()
         self.TARGET_W, self.TARGET_H = 172, 240
 
-        # 각각의 매니저에 독립된 포트 할당
+        # 매니저 초기화
         self.fpga_manager = FPGAUartManager(fpga_port)
         self.stm_manager = STM32UartManager(stm_port)
 
@@ -34,15 +34,17 @@ class MainWindow(QMainWindow):
         self.upload_img_path = None
 
         if not os.path.exists('images'): os.makedirs('images')
+
         self.init_ui()
         self.center_on_screen_top()
 
     def init_ui(self):
+        # 1. 메인 위젯 및 레이아웃 생성
         central_widget = QWidget()
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Header
+        # 2. Header (포트 정보 표시 등)
         header_frame = QFrame()
         header_frame.setObjectName("header_frame")
         h_layout = QHBoxLayout(header_frame)
@@ -56,11 +58,12 @@ class MainWindow(QMainWindow):
         h_layout.addWidget(port_badge)
         main_layout.addWidget(header_frame)
 
-        # Tabs
+        # 3. [중요] Tabs 객체를 먼저 생성!
         self.tabs = QTabWidget()
         self.tabs.setFixedSize(self.DISPLAY_W + 60, self.DISPLAY_H + 125)
 
-        # Tab 1: Load Image
+        # 4. 각 탭의 내용물(위젯)들 구성
+        # Tab 1: 이미지 로드
         upload_tab = QWidget()
         u_lay = QVBoxLayout(upload_tab)
         self.btn_load = QPushButton("이미지 불러오기")
@@ -72,7 +75,7 @@ class MainWindow(QMainWindow):
         u_lay.addWidget(self.btn_load)
         u_lay.addWidget(self.label_preview, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        # Tab 2: Sketch
+        # Tab 2: 실시간 스케치
         paint_tab = QWidget()
         p_lay = QVBoxLayout(paint_tab)
         self.paint_canvas = PaintCanvas(self.TARGET_W, self.TARGET_H, self.DISPLAY_W, self.DISPLAY_H)
@@ -87,10 +90,32 @@ class MainWindow(QMainWindow):
         p_lay.addLayout(tool_layout)
         p_lay.addWidget(self.paint_canvas, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        # Tab 3: 카메라 수신
+        self.camera_tab = QWidget()
+        c_lay = QVBoxLayout(self.camera_tab)
+        self.label_camera_status = QLabel("카메라 탭을 선택하면 수신을 시작합니다.")
+        self.label_camera_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_camera_status.setObjectName("preview_area")
+        self.label_camera_status.setFixedSize(self.DISPLAY_W, self.DISPLAY_H)
+        self.btn_send_camera_stm = QPushButton("STM32로 좌표 전송 시작")
+        self.btn_send_camera_stm.setObjectName("start_btn")
+        self.btn_send_camera_stm.setFixedHeight(55)
+        self.btn_send_camera_stm.setVisible(False)
+        self.btn_send_camera_stm.clicked.connect(self.send_camera_commands_to_stm)
+        c_lay.addStretch()
+        c_lay.addWidget(self.label_camera_status, alignment=Qt.AlignmentFlag.AlignCenter)
+        c_lay.addWidget(self.btn_send_camera_stm)
+        c_lay.addStretch()
+
+        # 5. 탭 추가
         self.tabs.addTab(upload_tab, " 이미지 로드 ")
         self.tabs.addTab(paint_tab, " 실시간 스케치 ")
+        self.tabs.addTab(self.camera_tab, " 카메라 수신 ")
 
-        # Bottom Button
+        # 6. [중요] 모든 탭 구성이 끝난 후 이벤트를 연결!
+        self.tabs.currentChanged.connect(self.on_tab_changed)
+
+        # 7. 하단 버튼 및 최종 레이아웃 합치기
         self.btn_start = QPushButton("전송 및 플로팅 시작")
         self.btn_start.setObjectName("start_btn")
         self.btn_start.setFixedHeight(55)
@@ -104,12 +129,55 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(content_layout)
         self.setCentralWidget(central_widget)
 
+    def _get_next_index(self):
+        idx = 0
+        while os.path.exists(f"images/image_{idx}.mem") or \
+                os.path.exists(f"images/filter_{idx}.mem"):
+            idx += 1
+        return idx
+
+    def on_tab_changed(self, index):
+        """탭이 바뀔 때마다 실행되는 제어 로직"""
+        self.fpga_manager.is_receiving = False
+        self.btn_send_camera_stm.setVisible(False)
+        # 카메라 탭(2번)일 때만 하단 시작 버튼 숨기기
+        self.btn_start.setVisible(index != 2)
+
+        if index == 2:
+            self.run_camera_mode()
+
+    def run_camera_mode(self):
+        idx = self._get_next_index()
+        save_path = f"images/filter_{idx}.mem"
+        self.label_camera_status.setText("📷 FPGA 데이터 수신 대기 중...")
+        QApplication.processEvents()
+
+        success = self.fpga_manager.receive_only_mode(
+            save_path,
+            lambda p: self.label_camera_status.setText(f"데이터 수신 중... {p}%")
+        )
+
+        if success:
+            self.label_camera_status.setText(f"✅ 수신 완료!\n파일: {os.path.basename(save_path)}")
+            self.btn_send_camera_stm.setVisible(True)
+        else:
+            if not self.fpga_manager.is_receiving:
+                self.label_camera_status.setText("수신이 중단되었습니다.")
+            else:
+                self.label_camera_status.setText("❌ 수신 오류 발생")
+
+    def send_camera_commands_to_stm(self):
+        path = "out_commands.txt"
+        if os.path.exists(path):
+            self.stm_manager.send_coordinates_file(path,
+                                                   lambda p: self.btn_send_camera_stm.setText(f"송신 중... {p}%"))
+            StatusDialog("SUCCESS", "플로팅 명령 전송이 완료되었습니다.", self).exec()
+            self.btn_send_camera_stm.setText("STM32로 좌표 전송 시작")
+
     def center_on_screen_top(self):
         qr = self.frameGeometry()
         cp = QApplication.primaryScreen().availableGeometry().center()
-
         cp.setY(cp.y() - 200)
-
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
@@ -133,7 +201,6 @@ class MainWindow(QMainWindow):
         }
 
         try:
-            # [1] 이미지 획득
             if self.tabs.currentIndex() == 0:
                 if not self.upload_img_path: raise Exception("이미지를 먼저 로드하세요.")
                 img = Image.open(self.upload_img_path)
@@ -146,9 +213,8 @@ class MainWindow(QMainWindow):
             img.save(paths['source'])
             self.btn_start.setEnabled(False)
 
-            # [2] STEP 1: FPGA 통신 (이미지 송신 및 필터 결과 수신)
             self.btn_start.setText("FPGA 데이터 송신 중...")
-            QApplication.processEvents()  # UI 갱신
+            QApplication.processEvents()
 
             if self.fpga_manager.save_as_mem(img, paths['mem']):
                 def fpga_cb(p):
@@ -160,13 +226,11 @@ class MainWindow(QMainWindow):
                 )
 
                 if success:
-                    # 수신 완료 후 이진 변환 저장
                     self.fpga_manager.convert_hex_to_binary_text(paths['filtered'], paths['binary'])
                     print("FPGA 수신 및 저장 완료")
                 else:
                     raise Exception("FPGA 통신 실패")
 
-            # [3] STEP 2: STM32 통신 (좌표 파일 송신)
             if os.path.exists(paths['commands']):
                 self.btn_start.setText("STM32 플로팅 준비 중...")
                 QApplication.processEvents()
@@ -175,7 +239,6 @@ class MainWindow(QMainWindow):
                     self.btn_start.setText(f"STM32 플로팅 중... {p}%")
                     QApplication.processEvents()
 
-                # out_commands.txt를 한 줄씩 보내고 0xBB 기다림
                 stm_success = self.stm_manager.send_coordinates_file(paths['commands'], stm_cb)
 
                 if stm_success:
