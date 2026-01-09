@@ -49,8 +49,10 @@ void Presenter_Plotter_Execute() {
 			// 서보모터 제어
 			if (move.z_state) {
 				Servo_Set_0();
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,GPIO_PIN_SET);
 			} else {
 				Servo_Set_90();
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,GPIO_PIN_SET);
 			}
 		}
 

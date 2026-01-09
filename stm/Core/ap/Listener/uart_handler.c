@@ -21,13 +21,11 @@ void UART_StartReceive(void) {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART2) {
 		if (rx_data == '\n') {
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,GPIO_PIN_RESET);
 			rx_buffer[rx_index] = '\0';
 			rx_index = 0;
 			Set_Data_Ready(1);
 			// 태스크가 파싱할 시간을 벌어줍니다.
 		} else if (rx_index < 63) {
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,GPIO_PIN_SET);
 			rx_buffer[rx_index++] = rx_data;
 			// 문장이 안 끝났을 때만 즉시 다음 바이트 수신 재개
 			HAL_UART_Receive_IT(&huart2, &rx_data, 1);

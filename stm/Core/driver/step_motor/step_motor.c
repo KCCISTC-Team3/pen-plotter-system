@@ -39,7 +39,7 @@ void Step_Set_ARR(uint32_t arr) {
 
 
 void Step_Start() { // 두개 한번에 시작
-    __HAL_TIM_SET_COUNTER(&htim2, 0);
+//    __HAL_TIM_SET_COUNTER(&htim2, 0);
     HAL_TIM_Base_Start_IT(&htim2);
 }
 

@@ -26,14 +26,17 @@ void Servo_SetAngle(uint8_t angle) {
 
 void Servo_Set_0() {
 	Servo_SetAngle(0);
+	osDelay(500);
 }
 
 void Servo_Set_90() {
 	Servo_SetAngle(90);
+	osDelay(500);
 }
 
 void Servo_Set_180() {
 	Servo_SetAngle(180);
+	osDelay(500);
 }
 
 void Servo_Stop() {

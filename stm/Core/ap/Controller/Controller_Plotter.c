@@ -33,13 +33,12 @@ void Controller_Plotter_Init() {
 void Controller_Plotter_Execute() {
 	coordinate_t next_coord;
 	motion_t next_motion;
+	uint8_t request_code = 0xBB;
+
 //	char debug_buf[64]; // 디버깅용 문자열 버퍼
 
 	if (xQueueReceive((QueueHandle_t) Cmd_QueueHandle, &next_coord,
 	portMAX_DELAY) == pdPASS) {
-		uint8_t request_code = 0xBB;
-		HAL_UART_Transmit(&huart2, &request_code, 1, 10);
-//ack 송신
 
 //		printf(debug_buf, "\r\n[Debug] X:%d.%d, Y:%d.%d\r\n",
 //				(int) next_coord.x,
@@ -98,6 +97,7 @@ void Controller_Plotter_Execute() {
 		// 6. Motion_Queue에 전송
 		xQueueSend((QueueHandle_t )Motion_QueueHandle, &next_motion,
 				portMAX_DELAY);
+		HAL_UART_Transmit(&huart2, &request_code, 1, 10);
 
 		// 현재 좌표 정보 갱신
 		current_x = next_coord.x;

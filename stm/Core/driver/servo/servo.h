@@ -10,6 +10,7 @@
 
 #include "tim.h"
 #include <stdint.h>
+#include "cmsis_os.h"
 
 extern TIM_HandleTypeDef htim1;
 

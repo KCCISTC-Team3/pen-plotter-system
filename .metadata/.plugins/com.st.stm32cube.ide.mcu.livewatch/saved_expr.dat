@@ -1,0 +1,7 @@
+move
+z_action
+isr_ctx.max_steps
+move.z_action
+current_x
+current_y
+current_z
