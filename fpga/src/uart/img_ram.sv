@@ -81,8 +81,8 @@ module tx_ram (
                     rAddr_cnt <= 0;
                 end
                 else begin
-                    rAddr_cnt <= rAddr_cnt + 1;
-                end
+                        rAddr_cnt <= rAddr_cnt + 1;
+                    end
             end 
             else begin
                 rAddr_cnt <= rAddr_cnt;

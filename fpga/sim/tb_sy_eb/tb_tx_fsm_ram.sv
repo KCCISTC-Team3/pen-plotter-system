@@ -10,14 +10,18 @@ module tb_tx_fsm_ram;
     logic [7:0] canny_r;
     wire tx;
 
-    // DUT
-    top_uart_tx_logic dut (
-        .clk      (clk),
-        .reset    (reset),
-        .canny_de (canny_de),
-        .canny_r  (canny_r),
-        .tx       (tx)
+
+    
+    uart_tx_fifo dut (
+        .clk         (clk),
+        .reset       (reset),
+        .tx_data     (canny_r),
+        .push        (canny_de),
+        .tx          (tx),
+        .tx_fifo_full()
     );
+    
+
 
     // --------------------------------------------------
     // Clock : 100MHz (10ns)
@@ -51,7 +55,10 @@ module tb_tx_fsm_ram;
         canny_r  <= 8'd0;
 
         // wait a bit
-        #1000;
+        #1000_0000;
+        
+        
+        
         $finish;
     end
 

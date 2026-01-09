@@ -74,7 +74,7 @@ module pixel_8_fsm (
                         next_state = ST_ADDR;
                         pixel_cnt_next = 3'b0;
                         we_next = 1'b1;
-                        if (wAddr_reg == 5160) begin
+                        if (wAddr_reg == 5160-1) begin
                             next_state = ST_DONE;
                         end
                     end else if (pixel_cnt_reg < 3'b111) begin
