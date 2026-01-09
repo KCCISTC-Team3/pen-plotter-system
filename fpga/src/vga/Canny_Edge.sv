@@ -21,7 +21,7 @@
 
 module Canny_Edge #(
     parameter WIDTH   = 8,
-    parameter H_RES   = 170,       // 가로 해상도
+    parameter H_RES   = 172,       // 가로 해상도
     parameter TH_HIGH = 230,       // Strong Edge 기준
     parameter TH_LOW  = 180        // Weak Edge 기준
 )(
