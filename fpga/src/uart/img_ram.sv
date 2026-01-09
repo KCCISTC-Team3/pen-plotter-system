@@ -23,16 +23,16 @@ module rx_ram (
     input  logic        clk,
     input  logic        we, //pixel_done
     input  logic [23:0] wData, 
-    input  logic [$clog2(240*170)-1:0] wAddr, //pixel_cnt
+    input  logic [$clog2(240*172)-1:0] wAddr, //pixel_cnt
     input  logic frame_done,
     output logic o_frame_done,
 
     input  logic         oe,
-    input  logic [$clog2(240*170)-1:0] rAddr, 
+    input  logic [$clog2(240*172)-1:0] rAddr, 
     output logic [23:0] imgData  
 );
 
-    logic [23:0] mem [0:(240*170)-1];
+    logic [23:0] mem [0:(240*172)-1];
 
     always_ff @(posedge clk) begin
         o_frame_done <= frame_done;
@@ -53,17 +53,17 @@ module tx_ram (
     input  logic        reset,
     input  logic        we, //canny_en
     input  logic [7:0]  wData, //canny_data[0]
-    input  logic [$clog2(30*170)-1:0] wAddr, //addr_cnt
+    input  logic [$clog2(30*172)-1:0] wAddr, //addr_cnt
     input  logic frame_tick,   // tick signal
     input  logic         re,
     output logic [7:0]   rData, 
     output logic frame_done   // hold signal 
 
 );
-    logic [7:0] mem [0:(30*170 )-1];
+    logic [7:0] mem [0:(30*172 )-1];
 
     //read address count
-    logic [$clog2(30*170)-1:0] rAddr_cnt;
+    logic [$clog2(30*172)-1:0] rAddr_cnt;
 
     always_ff @(posedge clk) begin
         if (we) mem[wAddr] <= wData;
@@ -77,7 +77,7 @@ module tx_ram (
         end 
         else begin
             if (re) begin
-                if(rAddr_cnt == (30*170)) begin
+                if(rAddr_cnt == (30*172)) begin
                     rAddr_cnt <= 0;
                 end
                 else begin
@@ -98,7 +98,7 @@ module tx_ram (
             if(frame_tick) begin
                 frame_done <= 1;
             end
-            else if (rAddr_cnt == (30*170)) begin
+            else if (rAddr_cnt == (30*172)) begin
                 frame_done <= 0;
             end
             else begin

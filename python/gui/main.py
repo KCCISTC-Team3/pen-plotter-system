@@ -14,7 +14,7 @@ from painter import PaintCanvas
 import style_sheets
 
 
-from config import *
+# from config import *
 
 
 # 1. 초기 시스템 연결 창
@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
     def __init__(self, port):
         super().__init__()
         # 해상도 WxH 고정 (총 40,800 픽셀)
-        self.TARGET_W, self.TARGET_H = W, H
+        self.TARGET_W, self.TARGET_H = 170, 240
 
         screen_geo = QApplication.primaryScreen().availableGeometry()
         display_h = int(screen_geo.height() * 0.52)
