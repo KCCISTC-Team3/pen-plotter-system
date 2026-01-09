@@ -93,6 +93,18 @@ module TOP (
         .g_port    (o_g),
         .b_port    (o_b)
     );
+    
+    /*
+     uart_tx_fifo U_UART_TX_FIFO (
+        .clk         (clk),
+        .reset       (reset),
+        .tx_data     (canny_data),
+        .push        (canny_de),
+        .tx          (tx),
+        .tx_fifo_full()
+    );
+    */
+    
 
     top_uart_tx_logic U_TOP_UART_TX_LOGIC (
         .clk       (clk),
@@ -101,6 +113,8 @@ module TOP (
         .canny_data(canny_data),
         .tx        (tx)
     );
+    
+    
 
 endmodule
 
@@ -117,8 +131,8 @@ module ImgReader (
     output logic [ 7:0] b_port
 );
 
-    logic [ 7:0] x_cnt;  // 0~171 카운터
-    logic [ 7:0] y_cnt;  // 0~239 카운터
+    logic [ 7:0] x_cnt;  // 0~171 移댁슫?꽣
+    logic [ 7:0] y_cnt;  // 0~239 移댁슫?꽣
     logic        reading;
     logic [23:0] reg_rgb_data;
 

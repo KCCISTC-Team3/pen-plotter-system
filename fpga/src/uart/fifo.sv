@@ -31,7 +31,7 @@ module fifo (
     output       empty
 );
 
-    wire [4:0] w_wptr, w_rptr;
+    wire [2:0] w_wptr, w_rptr;
 
     wire push_en = push & ~full;
     wire pop_en  = pop  & ~empty;
@@ -65,15 +65,15 @@ endmodule
 module register_file (
     input        clk,
     input        rst,
-    input  [4:0] wptr,
-    input  [4:0] rptr,
+    input  [2:0] wptr,
+    input  [2:0] rptr,
     input  [7:0] push_data,
     input        wr,
     input        pop_en,        // ? pop && !empty
     output [7:0] pop_data
 );
 
-    reg [7:0] ram[0:31];
+    reg [7:0] ram[0:7];
     reg [7:0] pop_data_reg;
 
     assign pop_data = pop_data_reg;
@@ -95,15 +95,15 @@ module fifo_cu (
     input        rst,
     input        push_en,   // = push & ~full
     input        pop_en,    // = pop  & ~empty
-    output [4:0] wptr,
-    output [4:0] rptr,
+    output [2:0] wptr,
+    output [2:0] rptr,
     output       full,
     output       empty
 );
 
     // state regs
-    reg [4:0] wptr_reg, wptr_next;
-    reg [4:0] rptr_reg, rptr_next;
+    reg [2:0] wptr_reg, wptr_next;
+    reg [2:0] rptr_reg, rptr_next;
     reg       full_reg, full_next;
     reg       empty_reg, empty_next;
 
@@ -138,36 +138,32 @@ module fifo_cu (
         case ({push_en, pop_en})
 
             2'b01: begin // POP only (guaranteed not empty)
-                rptr_next  = rptr_reg + 5'd1;
+                rptr_next  = rptr_reg + 3'd1;
                 full_next  = 1'b0;
 
                 // after pop, if read catches up to write -> empty
-                if (wptr_reg == (rptr_reg + 5'd1))
+                if (wptr_reg == (rptr_reg + 3'd1))
                     empty_next = 1'b1;
             end
 
             2'b10: begin // PUSH only (guaranteed not full)
-                wptr_next  = wptr_reg + 5'd1;
+                wptr_next  = wptr_reg + 3'd1;
                 empty_next = 1'b0;
 
                 // after push, if write catches up to read -> full (1-slot-empty ring)
-                if ((wptr_reg + 5'd1) == rptr_reg)
+                if ((wptr_reg + 3'd1) == rptr_reg)
                     full_next = 1'b1;
             end
 
-            2'b11: begin // PUSH + POP µ¿½Ã¿¡ (µÑ ´Ù °¡´ÉÇÏ´Ù°í º¸ÀåµÊ)
-                // µ¿½Ã¿¡ ÇÑ Ä­¾¿ ÀÌµ¿ÇÏ¸é occupancy´Â µ¿ÀÏ
-                wptr_next = wptr_reg + 5'd1;
-                rptr_next = rptr_reg + 5'd1;
-
-                // µ¿½Ã¿¡ ÀÏ¾î³ª¸é "full/empty °æ°è"¿¡¼­ ºüÁ®³ª¿À´Â È¿°ú¸¸ ÀÖÀ½
-                // (push_en/pop_enÀÌ ÀÌ¹Ì full/empty¸¦ °í·ÁÇØ¼­ µé¾î¿À¹Ç·Î)
+            2'b11: begin // PUSH + POP ë™ì‹œì— (ë‘˜ ë‹¤ ê°€ëŠ¥í•˜ë‹¤ê³  ë³´ì¥ë¨)
+                wptr_next = wptr_reg + 3'd1;
+                rptr_next = rptr_reg + 3'd1;
                 full_next  = 1'b0;
                 empty_next = 1'b0;
             end
 
             default: begin
-                // 2'b00 : ¾Æ¹« µ¿ÀÛ ¾øÀ½
+                // 2'b00 : ì•„ë¬´ ë™ì‘ ì—†ìŒ
             end
 
         endcase

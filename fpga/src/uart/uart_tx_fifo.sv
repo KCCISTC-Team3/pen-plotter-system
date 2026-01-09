@@ -31,9 +31,24 @@ module uart_tx_fifo(
     
     wire [7:0] w_tx_data;
     wire w_tx_empty, w_tx_busy;
-    wire tx_start_pulse = (~w_tx_empty) & (~w_tx_busy); 
-    wire tx_pop_pulse   = tx_start_pulse;
-    
+    //wire tx_start_pulse = (~w_tx_empty) & (~w_tx_busy); 
+    //wire tx_pop_pulse   = tx_start_pulse;
+
+    wire tx_start_cond;
+    assign tx_start_cond = (~w_tx_empty) & (~w_tx_busy);
+
+    reg tx_start_d;
+
+    always @(posedge clk or posedge reset) begin
+     if (reset)
+         tx_start_d <= 1'b0;
+     else
+        tx_start_d <= tx_start_cond;
+    end
+
+    wire tx_start_pulse = tx_start_d;
+    wire tx_pop_pulse = tx_start_cond;
+
      tick_gen_16 U_BOARD_TICK_GEN (
     .clk(clk),
     .rst(reset),
