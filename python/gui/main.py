@@ -1,7 +1,7 @@
 import sys
 import os
-import serial
-import time
+# import serial
+# import time
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
                              QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog,
                              QLabel, QLineEdit, QDialog, QMessageBox, QFrame, QSizePolicy)
@@ -211,7 +211,7 @@ class MainWindow(QMainWindow):
             self.btn_start.setEnabled(False)
             self.btn_start.setText("전송 준비 중...")
             QApplication.processEvents()
-
+################################################
             ser = serial.Serial(port=self.target_port, baudrate=115200, timeout=10)
 
             if ser.is_open:
@@ -297,7 +297,7 @@ class MainWindow(QMainWindow):
         finally:
             self.btn_start.setEnabled(True)
             self.btn_start.setText("전송 시작")
-
+################################################
 
 # StatusDialog 및 메인문 코드는 이전과 동일
 class StatusDialog(QDialog):
