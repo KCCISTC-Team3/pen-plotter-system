@@ -268,20 +268,16 @@ class MainWindow(QMainWindow):
                     binary_output_path = os.path.join('images', f"filtered_{current_num}_binary.txt")
 
                     with open(filtered_mem_path, 'r') as f_mem:
-                        # 공백이 없으므로 split() 대신 read()로 전체 문자를 가져옴
                         hex_content = f_mem.read()
 
                     all_bits = []
                     for char in hex_content:
-                        try:
-                            # 16진수 한 글자(4비트)씩 이진수로 변환
+                        if char in '0123456789abcdefABCDEF':
                             decimal_val = int(char, 16)
-                            binary_val = bin(decimal_val)[2:].zfill(4)
+                            binary_val = format(decimal_val, '08b')  # ← 핵심 수정
                             all_bits.append(binary_val)
-                        except ValueError:
-                            continue
 
-                    # 이진수 결과도 구분자 없이 쭈욱 합쳐서 저장
+                    # 이진수 결과를 공백 없이 이어서 저장
                     with open(binary_output_path, 'w') as f_bin:
                         f_bin.write("".join(all_bits))
 
