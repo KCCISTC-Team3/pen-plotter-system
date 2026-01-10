@@ -85,11 +85,11 @@ set_property top $top [current_fileset]
 
 if {$board == "digilentinc.com:zybo-z7-20:part0:1.0"} {
     # Add Zybo Z7-20 specific constraints
-    set xdc_files "$constrdir/zybo*.xdc"
+    set xdc_files "$constrdir/Zybo*.xdc"
     add_files -fileset constrs_1 $xdc_files
 } else if {$board == "digilentinc.com:basys3:part0:1.2"} {
     # Add Basys-3 specific constraints
-    set xdc_files "$constrdir/basys3*.xdc"
+    set xdc_files "$constrdir/Basys3*.xdc"
     add_files -fileset constrs_1 $xdc_files
 }
 
