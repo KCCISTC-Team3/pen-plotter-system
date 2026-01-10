@@ -61,7 +61,7 @@ class FPGAUartManager:
                 received_raw = ser.read(W * H)
                 if received_raw:
                     with open(filtered_path, "w") as f_out:
-                        f_out.write(HEADER_FPGA)   # header
+                        # f_out.write(HEADER_FPGA)   # header
                         for j in range(0, len(received_raw), 3):
                             chunk = received_raw[j:j + 3]
                             if len(chunk) == 3:

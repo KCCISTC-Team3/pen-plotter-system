@@ -12,12 +12,14 @@ def load_hex_txt_to_bytes(path: str) -> bytes:
 
     return bytes(int(t, 16) for t in tokens)
 
-def extract_payload_after_header(data: bytes, header: int, payload_len: int) -> bytes:
-    idx = data.find(bytes([header]))
-    if idx < 0:
-        raise ValueError(f"Header 0x{header:02X} not found in the file data.")
+# def extract_payload_after_header(data: bytes, header: int, payload_len: int) -> bytes:
+def extract_payload_after_header(data: bytes, payload_len: int) -> bytes:
+    # idx = data.find(bytes([header]))
+    # if idx < 0:
+    #     raise ValueError(f"Header 0x{header:02X} not found in the file data.")
 
-    start = idx + 1
+    # start = idx + 1
+    start = 0
     end = start + payload_len
     if len(data) < end:
         raise ValueError(f"Not enough bytes after header. Need {payload_len}, have {len(data) - start}.")

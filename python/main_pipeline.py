@@ -12,7 +12,8 @@ def run_pipeline(receive_path=RECEIVE_PATH, command_path=COMMAND_PATH):
     raw_bytes = load_hex_txt_to_bytes(receive_path)
 
     # Payload extraction after 0xAA
-    payload = extract_payload_after_header(raw_bytes, header=0xAA, payload_len=PAYLOAD_LEN)
+    # payload = extract_payload_after_header(raw_bytes, header=0xAA, payload_len=PAYLOAD_LEN)
+    payload = extract_payload_after_header(raw_bytes, payload_len=PAYLOAD_LEN)
     img255 = to_img255(unpack_payload_to_image(payload, w=W, h=H, bitorder=BITORDER))
 
     # Contour extraction
