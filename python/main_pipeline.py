@@ -6,10 +6,10 @@ from contour_optimization import *
 from io_utils import *
 
 
-def run_pipeline():
+def run_pipeline(receive_path=RECEIVE_PATH, command_path=COMMAND_PATH):
     ## 1. FPGA -> PC: Load filtered image from hex text file and extract contours
     # Load raw bytes from hex text file w/ 0xAA (test only)
-    raw_bytes = load_hex_txt_to_bytes(RECEIVE_PATH)
+    raw_bytes = load_hex_txt_to_bytes(receive_path)
 
     # Payload extraction after 0xAA
     payload = extract_payload_after_header(raw_bytes, header=0xAA, payload_len=PAYLOAD_LEN)
@@ -60,7 +60,7 @@ def run_pipeline():
         print(line.strip())
 
     # Save STM commands
-    with open(COMMAND_PATH, "w", encoding="utf-8") as f:
+    with open(command_path, "w", encoding="utf-8") as f:
         f.writelines(cmds)
 
 

@@ -12,11 +12,15 @@ import gui.style_sheets as style_sheets
 from io_utils.fpga_uart import FPGAUartManager
 from io_utils.stm32_uart import STM32UartManager
 
+from config import *
+from main_pipeline import run_pipeline
+
 
 class MainWindow(QMainWindow):
     def __init__(self, fpga_port, stm_port):
         super().__init__()
-        self.TARGET_W, self.TARGET_H = 176, 240
+        # self.TARGET_W, self.TARGET_H = 176, 240
+        self.TARGET_W, self.TARGET_H = W, H
 
         # 매니저 초기화
         self.fpga_manager = FPGAUartManager(fpga_port)
@@ -230,6 +234,17 @@ class MainWindow(QMainWindow):
                     print("FPGA 수신 및 저장 완료")
                 else:
                     raise Exception("FPGA 통신 실패")
+
+            ## Main pipeline runner (Added 01.10.2026)
+            if os.path.exists(paths['binary']):
+                self.btn_start.setText("이미지 처리 중...")
+                QApplication.processEvents()
+
+                run_pipeline(receive_path=paths['binary'], command_path=paths['commands'])
+                print("main_pipeline runner finished")
+            else:
+                raise Exception("Text file for main pipeline not found.")
+                
 
             if os.path.exists(paths['commands']):
                 self.btn_start.setText("STM32 플로팅 준비 중...")
