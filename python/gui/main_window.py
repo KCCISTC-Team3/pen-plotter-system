@@ -201,7 +201,7 @@ class MainWindow(QMainWindow):
             'filtered': f"images/filtered_{idx}.mem",
             'binary': f"images/filtered_{idx}_binary.txt",
             'source': f"images/source_{idx}.png",
-            'commands': "out_commands.txt"
+            'commands': f"images/out_commands_{idx}.txt"
         }
 
         try:
