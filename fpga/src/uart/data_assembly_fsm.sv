@@ -25,6 +25,7 @@ module data_assembly_fsm(
     input        reset,
     input        empty,
     input  [7:0]  pop_data,
+    input         cam_mode, // 1: camera mode, 0: uart mode
     output [23:0] rgb_data,
     output  reg   pixel_done, // we
     output  reg [15:0] pixel_cnt, // addr 0 ~ 40799
@@ -32,14 +33,15 @@ module data_assembly_fsm(
     );
     
      
- typedef enum logic [2:0] {
+ typedef enum logic [3:0] {
         ST_IDLE,
         ST_START_CHECK,
         ST_START,
         ST_R,
         ST_G,
         ST_B,
-        ST_ASSEMBLE
+        ST_ASSEMBLE,
+        ST_CAM_MODE
     } state;
 
     state current_state, next_state;
@@ -88,6 +90,9 @@ module data_assembly_fsm(
             end
             ST_START_CHECK: begin
                 if(pop_data == 8'hAA)
+                 if(cam_mode)
+                    next_state = ST_CAM_MODE;
+                else
                     next_state = ST_START;
                 else
                 next_state = ST_IDLE;
@@ -118,6 +123,11 @@ module data_assembly_fsm(
                     next_state = ST_IDLE;
                     pixel_cnt_next = 16'd0; 
                 end
+            end
+            ST_CAM_MODE : begin
+               frame_done = 1'b1;
+                next_state = ST_IDLE;
+                pixel_cnt_next = 16'd0; 
             end
         endcase
     end

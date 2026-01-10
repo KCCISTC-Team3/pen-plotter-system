@@ -3,6 +3,7 @@
 module TOP (
     input  logic clk,
     input  logic reset,
+    input  logic cam_mode, // 1: camera mode, 0: uart mode
     input  logic rx,
     output logic tx
 );
@@ -31,6 +32,7 @@ module TOP (
         .clk       (clk),
         .reset     (reset),
         .rx        (rx),
+        .cam_mode  (cam_mode), // camera mode
         .rgb_data  (write_rgb_data),
         .pixel_done(write_en),
         .pixel_cnt (write_addr),

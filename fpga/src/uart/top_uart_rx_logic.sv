@@ -7,6 +7,7 @@ module top_uart_rx_logic(
     input        clk,
     input        reset,
     input        rx,
+    input         cam_mode, // 1: camera mode, 0: uart mode
     output [23:0] rgb_data,
     output  reg   pixel_done, // we
     output  reg [15:0] pixel_cnt, // addr 0 ~ 40799
@@ -30,6 +31,7 @@ module top_uart_rx_logic(
     .clk(clk),
     .reset(reset),
     .empty(empty),
+    .cam_mode(cam_mode),
     .pop_data(pop_data),
     .rgb_data(rgb_data),
     .pixel_done(pixel_done),
