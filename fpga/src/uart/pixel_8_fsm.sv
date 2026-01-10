@@ -1,5 +1,3 @@
-
-
 module pixel_8_fsm (
     input  logic                    clk,
     input  logic                    reset,
