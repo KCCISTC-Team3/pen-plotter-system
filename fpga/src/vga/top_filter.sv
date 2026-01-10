@@ -2,11 +2,11 @@
 
 module top_filter #(
     parameter WIDTH = 8,
-    parameter H_RES = 172,
+    parameter H_RES = 176,
     parameter BRIGHTNESS_ADD = 30,
     parameter BRIGHTNESS_SUB = 30,
-    parameter TH_HIGH = 230,
-    parameter TH_LOW = 180
+    parameter TH_HIGH = 240,
+    parameter TH_LOW = 120
 ) (
     input  logic             clk,
     input  logic             rstn,
@@ -67,7 +67,7 @@ module top_filter #(
 
     Gaussian #(
         .WIDTH(8),
-        .H_RES(172)
+        .H_RES(176)
     ) U_Gaussian (
         .clk    (clk),
         .rstn   (rstn),
@@ -83,7 +83,7 @@ module top_filter #(
 
     Sobel #(
         .WIDTH(8),
-        .H_RES(172)
+        .H_RES(176)
     ) U_Sobel (
         .clk    (clk),
         .rstn   (rstn),
@@ -99,7 +99,7 @@ module top_filter #(
 
     Canny_Edge #(
         .WIDTH  (8),
-        .H_RES  (172),
+        .H_RES  (176),
         .TH_HIGH(250),
         .TH_LOW (120)
     ) U_Canny_Edge (

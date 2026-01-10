@@ -109,11 +109,11 @@ module data_assembly_fsm(
                 next_state = ST_ASSEMBLE;
             end
             ST_ASSEMBLE: begin
-                if(~empty & (pixel_cnt < (172*240 - 1)))begin
+                if(~empty & (pixel_cnt < (176*240 - 1)))begin
                     pixel_done = 1'b1;
                     next_state = ST_R;
                     pixel_cnt_next = pixel_cnt + 1;
-                end else if((pixel_cnt == (172*240 - 1))) begin
+                end else if((pixel_cnt == (176*240 - 1))) begin
                     frame_done = 1'b1;
                     next_state = ST_IDLE;
                     pixel_cnt_next = 16'd0; 

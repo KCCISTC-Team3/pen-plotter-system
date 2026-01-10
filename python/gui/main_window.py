@@ -16,7 +16,7 @@ from io_utils.stm32_uart import STM32UartManager
 class MainWindow(QMainWindow):
     def __init__(self, fpga_port, stm_port):
         super().__init__()
-        self.TARGET_W, self.TARGET_H = 172, 240
+        self.TARGET_W, self.TARGET_H = 176, 240
 
         # 매니저 초기화
         self.fpga_manager = FPGAUartManager(fpga_port)

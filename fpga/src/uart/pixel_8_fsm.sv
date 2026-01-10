@@ -7,7 +7,7 @@ module pixel_8_fsm (
     input  logic [             7:0] canny_data,
     output logic                    we,
     output logic [             7:0] wData,
-    output logic [$clog2(5160)-1:0] wAddr,
+    output logic [$clog2(5280)-1:0] wAddr,
     output logic                    frame_tick
 );
 
@@ -21,7 +21,7 @@ module pixel_8_fsm (
     state current_state, next_state;
 
     logic [7:0] wData_reg, wData_next;
-    logic [$clog2(5160)-1:0] wAddr_reg, wAddr_next;
+    logic [$clog2(5280)-1:0] wAddr_reg, wAddr_next;
     logic frame_tick_reg, frame_tick_next;
     logic [2:0] pixel_cnt_reg, pixel_cnt_next;  //0~7
     logic we_reg, we_next;
@@ -74,7 +74,7 @@ module pixel_8_fsm (
                         next_state = ST_ADDR;
                         pixel_cnt_next = 3'b0;
                         we_next = 1'b1;
-                        if (wAddr_reg == 5160-1) begin
+                        if (wAddr_reg == 5280-1) begin
                             next_state = ST_DONE;
                         end
                     end else if (pixel_cnt_reg < 3'b111) begin
