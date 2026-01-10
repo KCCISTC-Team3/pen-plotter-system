@@ -6,6 +6,6 @@ cd "$(dirname "$0")"
 ENV_NAME="python_env"
 
 # Default target if no argument is provided
-TARGET="${1:-main.py}"
+TARGET="${1:-gui_main.py}"
 
 conda run -n "${ENV_NAME}" python "${TARGET}" &
