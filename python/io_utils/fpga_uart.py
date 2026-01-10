@@ -79,7 +79,7 @@ class FPGAUartManager:
             if char in '0123456789abcdefABCDEF':
                 # 16진수 한 자리를 4비트로 변환하여 8비트(1바이트) 쌍을 맞춤
                 decimal_val = int(char, 16)
-                all_bits.append(format(decimal_val, '04b'))
+                all_bits.append(format(decimal_val, '08b'))
 
         with open(bin_path, 'w') as f_bin:
             f_bin.write("".join(all_bits))
