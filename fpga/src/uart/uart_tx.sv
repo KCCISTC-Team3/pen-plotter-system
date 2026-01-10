@@ -145,6 +145,7 @@ module uart_tx(
                     next_state = IDLE; 
                     b_16tick_cnt_n = 0;
                     tx_done_n =1;
+                    tx_busy_n =0;
                 end else begin
                     b_16tick_cnt_n = b_16tick_cnt_n +1 ;
                 end
