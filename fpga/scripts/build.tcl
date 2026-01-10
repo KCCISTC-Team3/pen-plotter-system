@@ -20,7 +20,8 @@ if {[info exists ::env(TOP)]} {
 }
 # set tb_top "tb_$top"                 ;# Testbench top module name (edit this)
 
-set board "digilentinc.com:basys3:part0:1.2" ;  # Basys-3 Board part
+# set board "digilentinc.com:basys3:part0:1.2" ;  # Basys-3 Board part
+set board "digilentinc.com:zybo-z7-20:part0:1.0" ;  # Zybo Z7-20 Board part
 set srcdir   "$proj_dir/src"
 set simdir   "$proj_dir/sim"
 set constrdir "$proj_dir/constr"
@@ -77,8 +78,18 @@ if {[llength $mem_file] > 0} {
 set_property top $top [current_fileset]
 
 # Add constraints
-set xdc_files [get_all_files $constrdir *.xdc]
-if {[llength $xdc_files] > 0} {
+# set xdc_files [get_all_files $constrdir *.xdc]
+# if {[llength $xdc_files] > 0} {
+    # add_files -fileset constrs_1 $xdc_files
+# }
+
+if {$board == "digilentinc.com:zybo-z7-20:part0:1.0"} {
+    # Add Zybo Z7-20 specific constraints
+    set xdc_files "$constrdir/zybo*.xdc"
+    add_files -fileset constrs_1 $xdc_files
+} else if {$board == "digilentinc.com:basys3:part0:1.2"} {
+    # Add Basys-3 specific constraints
+    set xdc_files "$constrdir/basys3*.xdc"
     add_files -fileset constrs_1 $xdc_files
 }
 
