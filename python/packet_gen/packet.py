@@ -1,1 +1,0 @@
-# [0xBB][NUM][cmd ...] builder for packets sent to the STM32

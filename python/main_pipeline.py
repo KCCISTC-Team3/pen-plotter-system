@@ -3,13 +3,10 @@ import cv2
 
 from config import *
 from contour_optimization import *
-from imaging import *
-# from gui import *
 from io_utils import *
-from packet_gen import *
 
 
-def main():
+def run_pipeline():
     ## 1. FPGA -> PC: Load filtered image from hex text file and extract contours
     # Load raw bytes from hex text file w/ 0xAA (test only)
     raw_bytes = load_hex_txt_to_bytes(RECEIVE_PATH)
@@ -113,6 +110,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_pipeline()
 
 
