@@ -2,10 +2,9 @@
 
 # Image dimensions and payload length
 W, H = 176, 240
-PAYLOAD_LEN = (W * H) // 8  # 5120 bytes for 1-bit image
+PAYLOAD_LEN = (W * H) // 8  # 5280 bytes for 1-bit image
 
 # FPGA communication settings
-# HEADER_FPGA = "AA"  # header byte from FPGA
 BITORDER = "big"    # try "little" if needed
 
 # Contour extraction settings
@@ -17,5 +16,5 @@ STEP_MM = 0.2       # for densification of contours
 EPSILON_MM = 1    # for RDP simplification (0.03 ~ 0.15 recommended)
 
 # File paths (for testing)
-RECEIVE_PATH = "./images/test_image1.txt"   # Input hex text file path
-COMMAND_PATH = "./images/out_commands.txt"  # Output command file path
+RECEIVE_PATH = "./sample/test_image1.txt"   # Input hex text file path
+COMMAND_PATH = "./sample/out_commands.txt"  # Output command file path
