@@ -2,10 +2,10 @@
 
 # Image dimensions and payload length
 W, H = 176, 240
-PAYLOAD_LEN = (W * H) // 8  # 5160 bytes
+PAYLOAD_LEN = (W * H) // 8  # 5120 bytes for 1-bit image
 
 # FPGA communication settings
-HEADER_FPGA = 0xAA  # header byte from FPGA
+HEADER_FPGA = "AA"  # header byte from FPGA
 BITORDER = "big"    # try "little" if needed
 
 # Contour extraction settings

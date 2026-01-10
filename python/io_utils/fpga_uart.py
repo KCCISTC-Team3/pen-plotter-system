@@ -2,6 +2,7 @@ import serial
 import time
 import os
 from PIL import Image
+from config import *
 
 
 class FPGAUartManager:
@@ -9,7 +10,7 @@ class FPGAUartManager:
         self.port = port
         self.baudrate = baudrate
 
-    def save_as_mem(self, img_obj, mem_path, target_size=(172, 240)):
+    def save_as_mem(self, img_obj, mem_path, target_size=(W, H)):
         """이미지를 FPGA용 .mem 형식으로 변환"""
         rgb_img = img_obj.resize(target_size, Image.Resampling.LANCZOS).convert("RGB")
         try:
@@ -24,7 +25,7 @@ class FPGAUartManager:
 
     def process_serial_communication(self, mem_path, filtered_path, progress_cb=None):
         """AA 트리거 송신 -> 데이터 송신 -> 데이터 수신 로직"""
-        ser = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=10)
+        ser = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=20)
         try:
             if ser.is_open:
                 time.sleep(3)
@@ -56,10 +57,11 @@ class FPGAUartManager:
                         raise Exception("FPGA 응답 없음 (Timeout)")
                     time.sleep(0.01)
 
-                # [D] 데이터 수신 (172*240*3 = 123,840 bytes이나 기존 코드 기준 41280 준수)
-                received_raw = ser.read(41280)
+                # [D] 데이터 수신
+                received_raw = ser.read(W * H)
                 if received_raw:
                     with open(filtered_path, "w") as f_out:
+                        f_out.write(HEADER_FPGA)   # header
                         for j in range(0, len(received_raw), 3):
                             chunk = received_raw[j:j + 3]
                             if len(chunk) == 3:

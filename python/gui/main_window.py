@@ -198,7 +198,7 @@ class MainWindow(QMainWindow):
 
         paths = {
             'mem': f"images/image_{idx}.mem",
-            'filtered': f"images/filtered_{idx}.mem",
+            'filtered': f"images/filtered_{idx}.txt",
             'binary': f"images/filtered_{idx}_binary.txt",
             'source': f"images/source_{idx}.png",
             'commands': f"images/out_commands_{idx}.txt"
@@ -231,16 +231,16 @@ class MainWindow(QMainWindow):
 
                 if success:
                     self.fpga_manager.convert_hex_to_binary_text(paths['filtered'], paths['binary'])
-                    print("FPGA 수신 및 저장 완료")
+                    print("FPGA communication finished")
                 else:
-                    raise Exception("FPGA 통신 실패")
+                    raise Exception("FPGA communication failed")
 
             ## Main pipeline runner (Added 01.10.2026)
-            if os.path.exists(paths['binary']):
+            if os.path.exists(paths['filtered']):
                 self.btn_start.setText("이미지 처리 중...")
                 QApplication.processEvents()
 
-                run_pipeline(receive_path=paths['binary'], command_path=paths['commands'])
+                run_pipeline(receive_path=paths['filtered'], command_path=paths['commands'])
                 print("main_pipeline runner finished")
             else:
                 raise Exception("Text file for main pipeline not found.")
