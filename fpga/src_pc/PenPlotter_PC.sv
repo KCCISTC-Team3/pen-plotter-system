@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module PenPlotter_System (
+module PenPlotter_PC (
     input  logic clk,
     input  logic reset,
     input  logic rx,
