@@ -104,6 +104,7 @@ module UART_TX #(
                         state_next    = IDLE;
                         tick_cnt_next = '0;
                         tx_done_next  = 1'b1;
+                        tx_busy_next  = 1'b0;
                     end else begin
                         tick_cnt_next = tick_cnt_reg + 1;
                     end
