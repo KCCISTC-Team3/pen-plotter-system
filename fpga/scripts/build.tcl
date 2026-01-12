@@ -20,8 +20,8 @@ if {[info exists ::env(TOP)]} {
 }
 # set tb_top "tb_$top"                 ;# Testbench top module name (edit this)
 
-# set board "digilentinc.com:basys3:part0:1.2" ;  # Basys-3 Board part
-set board "digilentinc.com:zybo-z7-20:part0:1.0" ;  # Zybo Z7-20 Board part
+set board "digilentinc.com:basys3:part0:1.2" ;  # Basys-3 Board part
+# set board "digilentinc.com:zybo-z7-20:part0:1.0" ;  # Zybo Z7-20 Board part
 
 
 set srcdir   "$proj_dir/src"

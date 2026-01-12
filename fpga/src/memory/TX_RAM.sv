@@ -2,7 +2,7 @@
 
 module TX_RAM #(
     parameter DATA_WIDTH  = 8,
-    parameter TOTAL_PIXELS = 42240,
+    parameter TOTAL_PIXELS = 9600,
     parameter ADDR_WIDTH  = $clog2(TOTAL_PIXELS)
 ) (
     input  logic                  clk,
@@ -17,6 +17,17 @@ module TX_RAM #(
 );
     logic [DATA_WIDTH-1:0] mem[0:TOTAL_PIXELS-1];
     logic [ADDR_WIDTH-1:0] rAddr_cnt;
+//
+    // (* rom_style = "distributed" *)logic [15:0] bg_mem  [0:(176*240)];  // LUT
+    // logic [16:0] bg_addr;
+    // logic [15:0] bg_data;
+    // logic [11:0] bg_rgb;
+
+    //(* rom_style = "block" *)logic [15:0] bg_mem  [0:76799];  // BRAM
+    // (* rom_style = "distributed" *)logic [15:0] bg_mem  [0:76799]; // LUT
+
+//
+
 
     always_ff @(posedge clk) begin
         rData <= mem[rAddr_cnt];

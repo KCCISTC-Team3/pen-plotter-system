@@ -194,7 +194,7 @@ module pixel_fsm (
     input [7:0] canny_data,
     output we,
     output [7:0] wData,
-    output [$clog2(176)-1:0] wAddr,
+    output [$clog2(176*240)-1:0] wAddr,
     output frame_tick
 );
 
@@ -208,7 +208,7 @@ typedef enum logic [2:0] {
 state current_state, next_state;
 
 reg [7:0] wData_reg, wData_next;
-reg [$clog2(176)-1:0] wAddr_reg, wAddr_next;
+reg [$clog2(176*240)-1:0] wAddr_reg, wAddr_next;
 reg frame_tick_reg, frame_tick_next; 
 // reg [2:0]pixel_cnt_reg, pixel_cnt_next; //0~7
 reg we_reg, we_next;

@@ -2,8 +2,8 @@
 
 module Data_Assembly_FSM #(
     parameter DATA_WIDTH      = 8,
-    parameter TOTAL_PIXELS    = 40800,
-    parameter PIXEL_CNT_WIDTH = 16
+    parameter TOTAL_PIXELS    = 9600,  // 42240
+    parameter PIXEL_CNT_WIDTH = 16     //  ??
 ) (
     input  logic                       clk,
     input  logic                       reset,
