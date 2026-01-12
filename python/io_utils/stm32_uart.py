@@ -67,7 +67,7 @@ class STM32UartManager:
                     if rx == b'\xbb':
                         print(" >> ACK OK")
                         break
-                if progress_cb: progress_cb(int(((i + 1) / len(gcode_content)) * 100))if progress_cb: progress_cb(int(((i + 1) / total) * 100))
+                if progress_cb: progress_cb(int(((i + 1) / len(gcode_content)) * 100))
 
             print("\nTransfer complete.")
 
