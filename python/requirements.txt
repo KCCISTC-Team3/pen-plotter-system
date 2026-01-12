@@ -1,5 +1,4 @@
 pyserial    # Protocol
-# PyQt6       # GUI
 
 # Image processing
 Pillow
