@@ -3,8 +3,8 @@
 module UART_RX_Top #(
     parameter DATA_WIDTH      = 8,
     parameter FIFO_DEPTH      = 5,
-    parameter IMG_WIDTH       = 170,
-    parameter IMG_HEIGHT      = 240,
+    parameter IMG_WIDTH       = 80,   // 170
+    parameter IMG_HEIGHT      = 120,  //240
     parameter TOTAL_PIXELS    = IMG_WIDTH * IMG_HEIGHT,
     parameter PIXEL_CNT_WIDTH = $clog2(TOTAL_PIXELS)
 ) (

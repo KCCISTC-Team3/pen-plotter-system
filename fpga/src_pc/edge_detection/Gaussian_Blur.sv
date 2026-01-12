@@ -2,7 +2,7 @@
 
 module Gaussian_Blur #(
     parameter WIDTH = 8,
-    parameter H_RES = 170
+    parameter H_RES = 80
 )(
     input  logic             clk,
     input  logic             rstn,

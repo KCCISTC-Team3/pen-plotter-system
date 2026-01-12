@@ -2,9 +2,9 @@
 
 module Edge_Detection_Top #(
     parameter WIDTH   = 8,
-    parameter H_RES   = 170,
-    parameter TH_HIGH = 255,
-    parameter TH_LOW  = 250
+    parameter H_RES   = 80,
+    parameter TH_HIGH = 240,
+    parameter TH_LOW  = 120
 ) (
     input  logic             clk,
     input  logic             rstn,

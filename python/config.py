@@ -1,8 +1,8 @@
 # Configuration parameters for the pen plotter system
 
 # Image dimensions and payload length
-W, H = 176, 240
-PAYLOAD_LEN = (W * H) // 8  # 5280 bytes for 1-bit image
+W, H = 80, 120
+PAYLOAD_LEN = (W * H) #// 8  # 5280 bytes for 1-bit image
 
 # FPGA communication settings
 BITORDER = "big"    # try "little" if needed
