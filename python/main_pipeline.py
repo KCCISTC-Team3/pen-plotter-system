@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 from config import *
-from contour_optimization import *
+from image_processing import *
 from io_utils import *
 
 
