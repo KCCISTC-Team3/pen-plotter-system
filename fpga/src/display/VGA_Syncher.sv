@@ -9,18 +9,17 @@ module VGA_Syncher (
     output logic [9:0] x_pixel,
     output logic [9:0] y_pixel
 );
-
     logic pclk;
     logic [9:0] h_counter, v_counter;
 
-    pixel_counter U_Pixel_Counter (
+    Pixel_Counter U_Pixel_Counter (
         .clk      (clk),
         .reset    (reset),
         .h_counter(h_counter),
         .v_counter(v_counter)
     );
 
-    vga_sync U_VGA_Sync (
+    VGA_Decoder U_VGA_Decoder (
         .h_counter(h_counter),
         .v_counter(v_counter),
         .h_sync   (h_sync),
@@ -29,9 +28,10 @@ module VGA_Syncher (
         .x_pixel  (x_pixel),
         .y_pixel  (y_pixel)
     );
+
 endmodule
 
-module pixel_counter (
+module Pixel_Counter (
     input  logic       clk,
     input  logic       reset,
     output logic [9:0] h_counter,
@@ -66,7 +66,7 @@ module pixel_counter (
     end
 endmodule
 
-module vga_sync (
+module VGA_Decoder (
     input  logic [9:0] h_counter,
     input  logic [9:0] v_counter,
     output logic       h_sync,
@@ -94,19 +94,4 @@ module vga_sync (
     assign DE = (h_counter < H_Visible_area) && (v_counter < V_Visible_area);
     assign x_pixel = h_counter;
     assign y_pixel = v_counter;
-endmodule
-
-module ImgReader_2 (
-    input  logic                       DE,
-    input  logic [                9:0] x_pixel,
-    input  logic [                9:0] y_pixel,
-    input  logic [               23:0] img,
-    output logic [$clog2(640*480)-1:0] addr,
-    output logic [                7:0] r_port,
-    output logic [                7:0] g_port,
-    output logic [                7:0] b_port
-);
-
-    assign addr = DE ? (640 * y_pixel + x_pixel) : 'bz;
-    assign {r_port, g_port, b_port} = DE ? {img[23:16], img[15:8], img[7:0]} : 'b0;
 endmodule

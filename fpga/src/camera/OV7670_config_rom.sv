@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module OV7670_config_rom (
+module OV7670_Config_Rom (
     input  logic        clk,
     input  logic [ 7:0] rom_addr,
     output logic [15:0] rom_data

@@ -1,12 +1,10 @@
 `timescale 1ns / 1ps
 
-module top_filter #(
-    parameter WIDTH = 8,
-    parameter H_RES = 176,
-    parameter BRIGHTNESS_ADD = 30,
-    parameter BRIGHTNESS_SUB = 30,
-    parameter TH_HIGH = 240,
-    parameter TH_LOW = 120
+module Edge_Detection_Top #(
+    parameter WIDTH   = 8,
+    parameter H_RES   = 170,
+    parameter TH_HIGH = 255,
+    parameter TH_LOW  = 250
 ) (
     input  logic             clk,
     input  logic             rstn,
@@ -21,24 +19,16 @@ module top_filter #(
     output logic             o_de,
     output logic [WIDTH-1:0] o_data
 );
-    logic       gray_vsync;
-    logic       gray_hsync;
-    logic       gray_de;
+    logic gray_vsync, gray_hsync, gray_de;
     logic [7:0] gray_data;
 
-    logic       gauss_vsync;
-    logic       gauss_hsync;
-    logic       gauss_de;
+    logic gauss_vsync, gauss_hsync, gauss_de;
     logic [7:0] gauss_data;
 
-    logic       sobel_vsync;
-    logic       sobel_hsync;
-    logic       sobel_de;
+    logic sobel_vsync, sobel_hsync, sobel_de;
     logic [7:0] sobel_data;
 
-    logic       canny_vsync;
-    logic       canny_hsync;
-    logic       canny_de;
+    logic canny_vsync, canny_hsync, canny_de;
     logic [7:0] canny_data;
 
     assign o_vsync = canny_vsync;
@@ -46,11 +36,9 @@ module top_filter #(
     assign o_de    = canny_de;
     assign o_data  = canny_data;
 
-    DS_Gray #(
-        .WIDTH(8),
-        .BRIGHTNESS_ADD(0),
-        .BRIGHTNESS_SUB(0)
-    ) U_DS_Gray (
+    Grayscale #(
+        .WIDTH(WIDTH)
+    ) U_Grayscale (
         .clk     (clk),
         .rstn    (rstn),
         .i_vsync (i_vsync),
@@ -61,14 +49,14 @@ module top_filter #(
         .i_b_data(i_b_data),
         .o_vsync (gray_vsync),
         .o_hsync (gray_hsync),
-        .o_de    (gray_de),     // 1clk delay
+        .o_de    (gray_de),
         .o_data  (gray_data)
     );
 
-    Gaussian #(
-        .WIDTH(8),
-        .H_RES(176)
-    ) U_Gaussian (
+    Gaussian_Blur #(
+        .WIDTH(WIDTH),
+        .H_RES(H_RES)
+    ) U_Gaussian_Blur (
         .clk    (clk),
         .rstn   (rstn),
         .i_vsync(gray_vsync),
@@ -77,13 +65,13 @@ module top_filter #(
         .i_data (gray_data),
         .o_vsync(gauss_vsync),
         .o_hsync(gauss_hsync),
-        .o_de   (gauss_de),     // 2clk delay
+        .o_de   (gauss_de),
         .o_data (gauss_data)
     );
 
     Sobel #(
-        .WIDTH(8),
-        .H_RES(176)
+        .WIDTH(WIDTH),
+        .H_RES(H_RES)
     ) U_Sobel (
         .clk    (clk),
         .rstn   (rstn),
@@ -93,16 +81,16 @@ module top_filter #(
         .i_data (gauss_data),
         .o_vsync(sobel_vsync),
         .o_hsync(sobel_hsync),
-        .o_de   (sobel_de),     // 3clk delay
+        .o_de   (sobel_de),
         .o_data (sobel_data)
     );
 
-    Canny_Edge #(
-        .WIDTH  (8),
-        .H_RES  (176),
-        .TH_HIGH(250),
-        .TH_LOW (120)
-    ) U_Canny_Edge (
+    Canny #(
+        .WIDTH  (WIDTH),
+        .H_RES  (H_RES),
+        .TH_HIGH(TH_HIGH),
+        .TH_LOW (TH_LOW)
+    ) U_Canny (
         .clk    (clk),
         .rstn   (rstn),
         .i_vsync(sobel_vsync),
@@ -111,7 +99,7 @@ module top_filter #(
         .i_data (sobel_data),
         .o_vsync(canny_vsync),
         .o_hsync(canny_hsync),
-        .o_de   (canny_de),     // 350clk delay
+        .o_de   (canny_de),
         .o_data (canny_data)
     );
 

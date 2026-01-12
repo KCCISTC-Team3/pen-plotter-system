@@ -1,27 +1,8 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2026/01/06 16:46:34
-// Design Name: 
-// Module Name: Sobel
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 module Sobel #(
     parameter WIDTH = 8,
-    parameter H_RES = 176
+    parameter H_RES = 170
 )(
     input  logic             clk,
     input  logic             rstn,

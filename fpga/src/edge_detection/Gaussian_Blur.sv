@@ -1,28 +1,8 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2026/01/06 16:45:53
-// Design Name: 
-// Module Name: Gaussian
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
-
-module Gaussian #(
+module Gaussian_Blur #(
     parameter WIDTH = 8,
-    parameter H_RES = 176
+    parameter H_RES = 170
 )(
     input  logic             clk,
     input  logic             rstn,

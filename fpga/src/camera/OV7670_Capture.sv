@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module OV7670_Mem_Controller #(
+module OV7670_Capture #(
     parameter IMG_WIDTH  = 320,
     parameter IMG_HEIGHT = 240,
     parameter ADDR_WIDTH = $clog2(IMG_WIDTH * IMG_HEIGHT)

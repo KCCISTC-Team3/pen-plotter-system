@@ -16,13 +16,13 @@ module SCCB_Interface (
     logic        tx_done;
     logic        ack_error;
 
-    OV7670_config_rom U_OV7670_config_rom (
+    OV7670_Config_Rom U_OV7670_Config_Rom (
         .clk     (clk),
         .rom_addr(rom_addr),
         .rom_data(rom_data)
     );
 
-    SCCB_ControlUnit U_SCCB_CU (
+    OV7670_Config_Controller U_Config_Controller (
         .clk      (clk),
         .reset    (reset),
         .rom_addr (rom_addr),
@@ -58,7 +58,7 @@ module SCCB_Interface (
 
 endmodule
 
-module SCCB_ControlUnit (
+module OV7670_Config_Controller (
     input  logic        clk,
     input  logic        reset,
     output logic [ 7:0] rom_addr,

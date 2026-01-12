@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module OV7670_Controller #(
+module OV7670_Top #(
     parameter IMG_WIDTH  = 320,
     parameter IMG_HEIGHT = 240,
     parameter ADDR_WIDTH = $clog2(IMG_WIDTH * IMG_HEIGHT)
@@ -25,7 +25,7 @@ module OV7670_Controller #(
         .SDA  (SDA)
     );
 
-    OV7670_Mem_Controller #(
+    OV7670_Capture #(
         .IMG_WIDTH (IMG_WIDTH),
         .IMG_HEIGHT(IMG_HEIGHT)
     ) U_OV7670_Mem_Ctrl (

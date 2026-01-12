@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module pixel_clk_gen (
+module Pixel_Clk_Gen (
     input  logic clk,
     input  logic reset,
     output logic pclk
@@ -11,7 +11,7 @@ module pixel_clk_gen (
         if (reset) begin
             p_counter <= 0;
         end else begin
-            if (p_counter == 3) begin   
+            if (p_counter == 3) begin
                 p_counter <= 0;
                 pclk      <= 1'b1;
             end else begin

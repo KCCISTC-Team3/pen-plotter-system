@@ -1,26 +1,6 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2026/01/06 16:44:57
-// Design Name: 
-// Module Name: DS_Gray
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
-
-module DS_Gray #(
+module Grayscale #(
     parameter WIDTH = 8,
     parameter BRIGHTNESS_ADD = 30,
     parameter BRIGHTNESS_SUB = 30
