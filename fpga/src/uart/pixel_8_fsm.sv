@@ -1,6 +1,6 @@
 module Pixel_8_FSM #(
     parameter DATA_WIDTH  = 8,
-    parameter TOTAL_BYTES = 5100,
+    parameter TOTAL_BYTES = 9600,
     parameter ADDR_WIDTH  = $clog2(TOTAL_BYTES)
 ) (
     input  logic                  clk,
@@ -102,7 +102,7 @@ endmodule
 
 module Pixel_FSM #(
     parameter DATA_WIDTH  = 8,
-    parameter TOTAL_PIXELS = 42240,
+    parameter TOTAL_PIXELS = 9600,
     parameter ADDR_WIDTH  = $clog2(TOTAL_PIXELS)
 ) (
     input  logic                  clk,
@@ -194,7 +194,7 @@ module pixel_fsm (
     input [7:0] canny_data,
     output we,
     output [7:0] wData,
-    output [$clog2(176*240)-1:0] wAddr,
+    output [$clog2(80*120)-1:0] wAddr,
     output frame_tick
 );
 
@@ -208,7 +208,7 @@ typedef enum logic [2:0] {
 state current_state, next_state;
 
 reg [7:0] wData_reg, wData_next;
-reg [$clog2(176*240)-1:0] wAddr_reg, wAddr_next;
+reg [$clog2(80*120)-1:0] wAddr_reg, wAddr_next;
 reg frame_tick_reg, frame_tick_next; 
 // reg [2:0]pixel_cnt_reg, pixel_cnt_next; //0~7
 reg we_reg, we_next;
@@ -259,10 +259,10 @@ always @(*) begin
                 we_next = 1'b1;
 
             end 
-            if(wAddr_reg == (176*240-1)) begin
+            if(wAddr_reg == (80*120-1)) begin
                     next_state = ST_DONE;
                 end 
-                else if (wAddr_reg < (176*240-1)) begin
+                else if (wAddr_reg < (80*120-1)) begin
                     wAddr_next = wAddr_reg + 1;
                     next_state = ST_DATA; 
                 end
