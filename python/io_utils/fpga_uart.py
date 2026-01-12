@@ -9,6 +9,7 @@ class FPGAUartManager:
     def __init__(self, port, baudrate=115200):
         self.port = port
         self.baudrate = baudrate
+        self.is_receiving = False
 
     def save_as_mem(self, img_obj, mem_path, target_size=(W, H)):
         """이미지를 FPGA용 .mem 형식으로 변환"""
