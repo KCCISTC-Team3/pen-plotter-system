@@ -71,6 +71,42 @@ class FPGAUartManager:
         finally:
             ser.close()
 
+    def receive_only_mode(self, save_path, progress_cb=None):
+        """[추가] 카메라 탭용: 트리거 없이 데이터가 올 때까지 대기 및 수신"""
+        self.is_receiving = True
+        received_data = bytearray()
+        target_size = 41280  # 예상 수신 크기
+
+        try:
+            # 타임아웃을 짧게 주어 루프가 돌면서 중단 플래그를 체크하게 함
+            ser = serial.Serial(self.port, self.baudrate, timeout=0.1)
+
+            while self.is_receiving and len(received_data) < target_size:
+                if ser.in_waiting > 0:
+                    chunk = ser.read(ser.in_waiting)
+                    received_data.extend(chunk)
+                    if progress_cb:
+                        p = int((len(received_data) / target_size) * 100)
+                        progress_cb(min(p, 100))
+
+                # 다른 탭 클릭 등의 이벤트를 처리하기 위해 잠시 양보
+                QCoreApplication.processEvents()
+                time.sleep(0.01)
+
+            if not self.is_receiving:  # 탭 이동으로 중단된 경우
+                return False
+
+            if len(received_data) >= target_size:
+                with open(save_path, "w") as f:
+                    f.write(received_data.hex())
+                return True
+            return False
+        except Exception as e:
+            print(f"수신 에러: {e}")
+            return False
+        finally:
+            if 'ser' in locals(): ser.close()
+
     def convert_hex_to_binary_text(self, hex_path, bin_path):
         """수신된 Hex 파일을 일자 나열된 Binary 텍스트로 변환"""
         with open(hex_path, 'r') as f_mem:
