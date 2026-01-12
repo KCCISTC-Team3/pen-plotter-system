@@ -53,17 +53,17 @@ module tx_ram (
     input  logic        reset,
     input  logic        we, //canny_en
     input  logic [7:0]  wData, //canny_data[0]
-    input  logic [$clog2(176)-1:0] wAddr, //addr_cnt
+    input  logic [$clog2(176*240)-1:0] wAddr, //addr_cnt
     input  logic frame_tick,   // tick signal
     input  logic         re,
     output logic [7:0]   rData, 
     output logic frame_done   // hold signal 
 
 );
-    logic [7:0] mem [0:(176)-1];
+    logic [7:0] mem [0:(176*240)-1];
 
     //read address count
-    logic [$clog2(176)-1:0] rAddr_cnt;
+    logic [$clog2(176*240)-1:0] rAddr_cnt;
 
     always_ff @(posedge clk) begin
         rData <= mem[rAddr_cnt];
@@ -76,7 +76,7 @@ module tx_ram (
         end 
         else begin
             if (re) begin
-                if(rAddr_cnt == (176)-1) begin
+                if(rAddr_cnt == (176*240-1)) begin
                     rAddr_cnt <= 0;
                 end else begin
                         rAddr_cnt <= rAddr_cnt + 1;

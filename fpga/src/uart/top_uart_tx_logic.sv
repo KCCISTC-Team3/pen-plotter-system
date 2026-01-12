@@ -9,7 +9,7 @@ module top_uart_tx_logic (
 
     logic                    we;
     logic [             7:0] wData;
-    logic [$clog2(176)-1:0] wAddr;
+    logic [$clog2(176*240)-1:0] wAddr;
     logic                    frame_tick;
     logic                    tx_fifo_full;
     logic [             7:0] tx_data;

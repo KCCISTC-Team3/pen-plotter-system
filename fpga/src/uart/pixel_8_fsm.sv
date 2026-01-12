@@ -175,10 +175,10 @@ always @(*) begin
                 we_next = 1'b1;
 
             end 
-            if(wAddr_reg == (176-1)) begin
+            if(wAddr_reg == (176*240-1)) begin
                     next_state = ST_DONE;
                 end 
-                else if (wAddr_reg < (176-1)) begin
+                else if (wAddr_reg < (176*240-1)) begin
                     wAddr_next = wAddr_reg + 1;
                     next_state = ST_DATA; 
                 end
