@@ -2,15 +2,31 @@
 import numpy as np
 import re
 
+# def load_hex_txt_to_bytes(path: str) -> bytes:
+#     with open(path, "r", encoding="utf-8", errors="ignore") as f:
+#         text = f.read()
+
+#     tokens = re.findall(r"(?:0x)?([0-9a-fA-F]{2})", text)
+#     if not tokens:
+#         raise ValueError("No hex byte tokens found in the txt file.")
+
+#     return bytes(int(t, 16) for t in tokens)
+
+
 def load_hex_txt_to_bytes(path: str) -> bytes:
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         text = f.read()
 
-    tokens = re.findall(r"(?:0x)?([0-9a-fA-F])", text)
-    if not tokens:
-        raise ValueError("No hex byte tokens found in the txt file.")
+    # Keep only hex characters
+    hex_str = re.sub(r"[^0-9a-fA-F]", "", text)
 
-    return bytes(int(t, 16) for t in tokens)
+    if len(hex_str) < 2:
+        raise ValueError("No hex data found in the txt file.")
+
+    if len(hex_str) % 2 != 0:
+        raise ValueError(f"Hex string length must be even, got {len(hex_str)}.")
+
+    return bytes.fromhex(hex_str)
 
 # def extract_payload_after_header(data: bytes, header: int, payload_len: int) -> bytes:
 def extract_payload_after_header(data: bytes, payload_len: int) -> bytes:
@@ -22,12 +38,12 @@ def extract_payload_after_header(data: bytes, payload_len: int) -> bytes:
     start = 0
     end = start + payload_len
     if len(data) < end:
-        raise ValueError(f"Not enough bytes after header. Need {payload_len}, have {len(data) - start}.")
+        raise ValueError(f"Not enough bytes. Need {payload_len}, have {len(data) - start}.")
 
     return data[start:end]
 
 def unpack_payload_to_image(payload: bytes, w: int, h: int, bitorder: str = "big") -> np.ndarray:
-    expected = (w * h) // 8
+    expected = (w * h + 7) // 8
     if len(payload) != expected:
         raise ValueError(f"Payload must be {expected} bytes, got {len(payload)} bytes.")
 
