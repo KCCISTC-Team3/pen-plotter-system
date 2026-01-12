@@ -16,7 +16,7 @@ class PortConfigDialog(QDialog):
 
         # FPGA 포트 입력
         layout.addWidget(QLabel("FPGA Port (이미지 처리):"))
-        self.fpga_port = QLineEdit("COM3")
+        self.fpga_port = QLineEdit("COM4")
         self.fpga_port.setFixedHeight(35)
         layout.addWidget(self.fpga_port)
 
