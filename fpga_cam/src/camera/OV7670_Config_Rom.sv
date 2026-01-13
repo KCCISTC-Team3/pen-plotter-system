@@ -33,12 +33,12 @@ module OV7670_Config_Rom (
             17: rom_data <= 16'h3D_C0;  // COM13: Gamma enable, UV saturation auto adjust
             
             // Window settings for QVGA
-            18: rom_data <= 16'h17_13;  // HSTART: Horizontal start
-            19: rom_data <= 16'h18_01;  // HSTOP: Horizontal stop
-            20: rom_data <= 16'h32_B6;  // HREF: Edge offset
-            21: rom_data <= 16'h19_02;  // VSTART: Vertical start
-            22: rom_data <= 16'h1A_7A;  // VSTOP: Vertical stop
-            23: rom_data <= 16'h03_0A;  // VREF: Vertical frame control
+            18: rom_data <= 16'h17_15;  // HSTART: Horizontal start
+            19: rom_data <= 16'h18_03;  // HSTOP: Horizontal stop
+            20: rom_data <= 16'h32_00;  // HREF: Edge offset
+            21: rom_data <= 16'h19_03;  // VSTART: Vertical start
+            22: rom_data <= 16'h1A_7B;  // VSTOP: Vertical stop
+            23: rom_data <= 16'h03_00;  // VREF: Vertical frame control
             24: rom_data <= 16'h0F_41;  // COM6: Reset timing when format changes
             25: rom_data <= 16'h1E_00;  // MVFP: No mirror/flip
             
@@ -99,7 +99,7 @@ module OV7670_Config_Rom (
             
             // Enable AGC/AEC
             71: rom_data <= 16'h13_E7;  // COM8: Enable AGC/AEC/AWB
-            72: rom_data <= 16'h69_00;  // GFIX: Fix gain control
+            72: rom_data <= 16'h69_07;  // GFIX: Fix gain control
             
             default: rom_data <= 16'hFF_FF;  // End of configuration
         endcase
