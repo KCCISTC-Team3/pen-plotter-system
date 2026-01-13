@@ -76,7 +76,7 @@ class FPGAUartManager:
         """[추가] 카메라 탭용: 트리거 없이 데이터가 올 때까지 대기 및 수신"""
         self.is_receiving = True
         received_data = bytearray()
-        target_size = 41280  # 예상 수신 크기
+        target_size = W * H  # 예상 수신 크기
 
         try:
             # 타임아웃을 짧게 주어 루프가 돌면서 중단 플래그를 체크하게 함
@@ -91,7 +91,7 @@ class FPGAUartManager:
                         progress_cb(min(p, 100))
 
                 # 다른 탭 클릭 등의 이벤트를 처리하기 위해 잠시 양보
-                QCoreApplication.processEvents()
+                # QCoreApplication.processEvents()
                 time.sleep(0.01)
 
             if not self.is_receiving:  # 탭 이동으로 중단된 경우
