@@ -1,8 +1,162 @@
 `timescale 1ns / 1ps
 
-module FIFO #(
+module FIFO  #(
+    parameter DATA_WIDTH = 8,
+    parameter ADDR_WIDTH = 3
+)(
+    input        clk,
+    input        reset,
+    input  [DATA_WIDTH-1:0] push_data,
+    input        push,
+    input        pop,
+    output [DATA_WIDTH-1:0] pop_data,
+    output       full,
+    output       empty
+);
+
+    wire [ADDR_WIDTH-1:0] w_wptr, w_rptr;
+
+    register_file  #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .ADDR_WIDTH(ADDR_WIDTH)
+    ) U_REG_FILE (
+        .clk(clk),
+        .wptr(w_wptr),
+        .rptr(w_rptr),
+        .push_data(push_data),
+        .wr(~full & push),
+        .pop_data(pop_data)
+    );
+
+    fifo_cu #(
+        .ADDR_WIDTH(ADDR_WIDTH)
+    ) U_FIFO_CU (
+        .clk  (clk),
+        .rst  (reset),
+        .push (push),
+        .pop  (pop),
+        .wptr (w_wptr),
+        .rptr (w_rptr),
+        .full (full),
+        .empty(empty)
+    );
+
+endmodule
+
+module register_file#(
     parameter DATA_WIDTH = 8,
     parameter ADDR_WIDTH = 5
+)  (
+    input        clk,
+    input  [ADDR_WIDTH-1:0] wptr,
+    input  [ADDR_WIDTH-1:0] rptr,
+    input  [DATA_WIDTH-1:0] push_data,
+    input        wr,
+    output [DATA_WIDTH-1:0] pop_data
+);
+    localparam DEPTH = 2 ** ADDR_WIDTH;
+    reg [DATA_WIDTH-1:0] ram[0:DEPTH-1];
+
+    // output CL
+    assign pop_data = ram[rptr];
+
+    always @(posedge clk) begin
+        if (wr) begin
+            ram[wptr] <= push_data;
+        end
+    end
+
+endmodule
+
+module fifo_cu #(
+    parameter ADDR_WIDTH = 3
+)(
+    input        clk,
+    input        rst,
+    input        push,
+    input        pop,
+    output [ADDR_WIDTH-1:0] wptr,
+    output [ADDR_WIDTH-1:0] rptr,
+    output       full,
+    output       empty
+);
+
+    // output
+    reg [ADDR_WIDTH-1:0] wptr_reg, wptr_next;
+    reg [ADDR_WIDTH-1:0] rptr_reg, rptr_next;
+    reg full_reg, full_next;
+    reg empty_reg, empty_next;
+
+    assign wptr  = wptr_reg;
+    assign rptr  = rptr_reg;
+    assign full  = full_reg;
+    assign empty = empty_reg;
+
+    always @(posedge clk, posedge rst) begin
+        if (rst) begin
+            wptr_reg  <= 0;
+            rptr_reg  <= 0;
+            full_reg  <= 0;
+            empty_reg <= 1'b1;
+        end else begin
+            wptr_reg  <= wptr_next;
+            rptr_reg  <= rptr_next;
+            full_reg  <= full_next;
+            empty_reg <= empty_next;
+        end
+    end
+
+    always @(*) begin
+        wptr_next  = wptr_reg;
+        rptr_next  = rptr_reg;
+        full_next  = full_reg;
+        empty_next = empty_reg;
+        case ({
+            push, pop
+        })
+            2'b01: begin  // pop
+          
+                if (!empty_reg) begin
+                    full_next = 0;
+                    rptr_next = rptr_reg + 1;
+                    if (wptr_reg == rptr_next) begin
+                        empty_next = 1'b1;
+                    end
+                end
+            end
+            2'b10: begin  // push
+          
+                if (!full_reg) begin
+                    empty_next = 0;
+                    wptr_next = wptr_reg + 1;
+                    if (wptr_next == rptr_reg) begin
+                        full_next = 1'b1;
+                    end
+                end
+            end
+            2'b11: begin
+                if (empty_reg == 1'b1) begin
+                    wptr_next  = wptr_reg + 1;
+                    empty_next = 1'b0;
+                end else if (full_reg == 1'b1) begin
+                    rptr_next = rptr_reg + 1;
+                    full_next = 1'b0;
+                end else begin
+                    // not be full, empty
+                    wptr_next = wptr_reg + 1;
+                    rptr_next = rptr_reg + 1;
+                end
+            end
+        endcase
+    end
+
+endmodule
+
+
+/*
+module FIFO #(
+    parameter DATA_WIDTH = 8,
+    parameter ADDR_WIDTH = 3
 ) (
     input  logic                  clk,
     input  logic                  reset,
@@ -81,6 +235,7 @@ module Register_File #(
 
 endmodule
 
+
 module FIFO_Control_Unit #(
     parameter ADDR_WIDTH = 5
 ) (
@@ -146,3 +301,5 @@ module FIFO_Control_Unit #(
     end
 
 endmodule
+
+*/
