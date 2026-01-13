@@ -95,8 +95,8 @@ class MainWindow(QMainWindow):
         p_lay.addWidget(self.paint_canvas, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Tab 3: 카메라 수신
-        self.camera_tab = QWidget()
-        c_lay = QVBoxLayout(self.camera_tab)
+        camera_tab = QWidget()
+        c_lay = QVBoxLayout(camera_tab)
         self.label_camera_status = QLabel("카메라 탭을 선택하면 수신을 시작합니다.")
         self.label_camera_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_camera_status.setObjectName("preview_area")
@@ -114,7 +114,7 @@ class MainWindow(QMainWindow):
         # 5. 탭 추가
         self.tabs.addTab(upload_tab, " 이미지 로드 ")
         self.tabs.addTab(paint_tab, " 실시간 스케치 ")
-        self.tabs.addTab(self.camera_tab, " 카메라 수신 ")
+        self.tabs.addTab(camera_tab, " 카메라 수신 ")
 
         # 6. [중요] 모든 탭 구성이 끝난 후 이벤트를 연결!
         self.tabs.currentChanged.connect(self.on_tab_changed)
@@ -160,7 +160,6 @@ class MainWindow(QMainWindow):
             save_path,
             lambda p: self.label_camera_status.setText(f"데이터 수신 중... {p}%")
         )
-
         if success:
             self.label_camera_status.setText(f"✅ 수신 완료!\n파일: {os.path.basename(save_path)}")
             self.btn_send_camera_stm.setVisible(True)
