@@ -3,8 +3,8 @@
 module Img_Reader #(
     parameter RGB_WIDTH  = 24,
     parameter DATA_WIDTH = 8,
-    parameter IMG_WIDTH  = 80,    //176
-    parameter IMG_HEIGHT = 120,   //240
+    parameter IMG_WIDTH  = 176,    //176
+    parameter IMG_HEIGHT = 240,   //240
     parameter ADDR_WIDTH = $clog2(IMG_WIDTH * IMG_HEIGHT)
 ) (
     input  logic                  clk,

@@ -2,7 +2,7 @@
 
 module Edge_Detection_Top #(
     parameter WIDTH   = 8,
-    parameter H_RES   = 80,
+    parameter H_RES   = 176,
     parameter TH_HIGH = 240,
     parameter TH_LOW  = 120
 ) (

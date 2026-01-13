@@ -1,6 +1,6 @@
 module Pixel_8_FSM #(
     parameter DATA_WIDTH  = 8,
-    parameter TOTAL_BYTES = 9600,
+    parameter TOTAL_BYTES = 42240,
     parameter ADDR_WIDTH  = $clog2(TOTAL_BYTES)
 ) (
     input  logic                  clk,
@@ -102,7 +102,7 @@ endmodule
 
 module Pixel_FSM #(
     parameter DATA_WIDTH  = 8,
-    parameter TOTAL_PIXELS = 9600,
+    parameter TOTAL_PIXELS = 42240,
     parameter ADDR_WIDTH  = $clog2(TOTAL_PIXELS)
 ) (
     input  logic                  clk,
@@ -194,7 +194,7 @@ module pixel_fsm (
     input [7:0] canny_data,
     output we,
     output [7:0] wData,
-    output [$clog2(80*120)-1:0] wAddr,
+    output [$clog2(176*240)-1:0] wAddr,
     output frame_tick
 );
 
