@@ -197,7 +197,8 @@ class MainWindow(QMainWindow):
 
         paths = {
             'mem': f"images/image_{idx}.mem",
-            'filtered': f"images/filtered_{idx}.txt",
+            # 'filtered': f"images/filtered_{idx}.txt",
+            'filtered': f"images/05_canny_packed_1bpp_hex_{idx}.txt",
             'binary': f"images/filtered_{idx}_binary.txt",
             'source': f"images/source_{idx}.png",
             'commands': f"images/out_commands_{idx}.txt"
@@ -216,23 +217,43 @@ class MainWindow(QMainWindow):
             img.save(paths['source'])
             self.btn_start.setEnabled(False)
 
-            self.btn_start.setText("FPGA 데이터 송신 중...")
+            self.btn_start.setText("처리 중...")
             QApplication.processEvents()
 
-            if self.fpga_manager.save_as_mem(img, paths['mem']):
-                def fpga_cb(p):
-                    self.btn_start.setText(f"FPGA 처리 중... {p}%")
-                    QApplication.processEvents()
+            # Use filtered_hex_img_gen to process and save .mem file (not using FPGA now)
+            from image_processing.filtered_hex_img_gen import process_and_save
+            process_and_save(
+                paths['source'],
+                out_dir="images",
+                idx=idx,
+                gaussian_ksize=5,
+                gaussian_sigma=1.0,
+                sobel_ksize=3,
+                canny_low=50,
+                canny_high=150,
+                hex_mode="stream",      # "stream" or "tokens"
+                save_packed_1bpp=True,
+            )
 
-                success = self.fpga_manager.process_serial_communication(
-                    paths['mem'], paths['filtered'], fpga_cb
-                )
 
-                if success:
-                    self.fpga_manager.convert_hex_to_binary_text(paths['filtered'], paths['binary'])
-                    print("FPGA communication finished")
-                else:
-                    raise Exception("FPGA communication failed")
+            # self.btn_start.setText("FPGA 데이터 송신 중...")
+            # QApplication.processEvents()
+
+            # if self.fpga_manager.save_as_mem(img, paths['mem']):
+            #     def fpga_cb(p):
+            #         self.btn_start.setText(f"FPGA 처리 중... {p}%")
+            #         QApplication.processEvents()
+
+            #     success = self.fpga_manager.process_serial_communication(
+            #         paths['mem'], paths['filtered'], fpga_cb
+            #     )
+
+            #     if success:
+            #         self.fpga_manager.convert_hex_to_binary_text(paths['filtered'], paths['binary'])
+            #         print("FPGA communication finished")
+            #     else:
+            #         raise Exception("FPGA communication failed")
+            
 
             ## Main pipeline runner (Added 01.10.2026)
             if os.path.exists(paths['filtered']):
