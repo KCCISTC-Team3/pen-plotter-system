@@ -1,7 +1,7 @@
 import serial
 import time
 
-from config import *
+from config import COMMAND_PATH, STM32_PORT, BAUD
 
 class STM32UartManager:
     def __init__(self, port, baudrate=115200):

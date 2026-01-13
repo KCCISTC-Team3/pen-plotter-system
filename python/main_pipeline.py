@@ -1,19 +1,19 @@
 import numpy as np
 import cv2
 
-from config import *
+from config import RECEIVE_PATH, COMMAND_PATH, BITORDER, MIN_CONTOUR_LEN_PX, PIXEL_TO_MM, STEP_MM, EPSILON_MM
 from image_processing import *
 from io_utils import *
 
 
-def run_pipeline(receive_path=RECEIVE_PATH, command_path=COMMAND_PATH):
+def run_pipeline(w, h, receive_path=RECEIVE_PATH, command_path=COMMAND_PATH):
     ## 1. FPGA -> PC: Load filtered image from hex text file and extract contours
     # Load raw bytes from hex text file w/ 0xAA (test only)
     raw_bytes = load_hex_txt_to_bytes(receive_path)
 
     # Payload extraction
-    payload = extract_payload_after_header(raw_bytes, payload_len=PAYLOAD_LEN)
-    img255 = to_img255(unpack_payload_to_image(payload, w=W, h=H, bitorder=BITORDER))
+    payload = extract_payload_after_header(raw_bytes, payload_len=(w * h + 7) // 8)
+    img255 = to_img255(unpack_payload_to_image(payload, w, h, bitorder=BITORDER))
 
     # Contour extraction
     contours = extract_contours_all(img255, min_len_px=MIN_CONTOUR_LEN_PX, retrieval=cv2.RETR_LIST)

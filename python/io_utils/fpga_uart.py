@@ -2,7 +2,6 @@ import serial
 import time
 import os
 from PIL import Image
-from config import *
 
 
 class FPGAUartManager:
@@ -11,7 +10,8 @@ class FPGAUartManager:
         self.baudrate = baudrate
         self.is_receiving = False
 
-    def save_as_mem(self, img_obj, mem_path, target_size=(W, H)):
+
+    def save_as_mem(self, img_obj, mem_path, target_size):
         """이미지를 FPGA용 .mem 형식으로 변환"""
         rgb_img = img_obj.resize(target_size, Image.Resampling.LANCZOS).convert("RGB")
         try:
@@ -24,7 +24,7 @@ class FPGAUartManager:
             print(f"파일 저장 실패: {e}")
             return False
 
-    def process_serial_communication(self, mem_path, filtered_path, progress_cb=None):
+    def process_serial_communication(self, mem_path, filtered_path, progress_cb=None, target_size=None):
         """AA 트리거 송신 -> 데이터 송신 -> 데이터 수신 로직"""
         ser = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=20)
         try:
@@ -59,7 +59,7 @@ class FPGAUartManager:
                     time.sleep(0.01)
 
                 # [D] 데이터 수신
-                received_raw = ser.read(W * H)
+                received_raw = ser.read(target_size)
                 if received_raw:
                     with open(filtered_path, "w") as f_out:
                         # f_out.write(HEADER_FPGA)   # header
@@ -72,11 +72,11 @@ class FPGAUartManager:
         finally:
             ser.close()
 
-    def receive_only_mode(self, save_path, progress_cb=None):
+    def receive_only_mode(self, save_path, progress_cb=None, target_size=None):
         """[추가] 카메라 탭용: 트리거 없이 데이터가 올 때까지 대기 및 수신"""
         self.is_receiving = True
         received_data = bytearray()
-        target_size = W * H  # 예상 수신 크기
+        # target_size = W * H  # 예상 수신 크기
 
         try:
             # 타임아웃을 짧게 주어 루프가 돌면서 중단 플래그를 체크하게 함

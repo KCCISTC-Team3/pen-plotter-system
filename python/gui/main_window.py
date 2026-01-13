@@ -19,8 +19,7 @@ from main_pipeline import run_pipeline
 class MainWindow(QMainWindow):
     def __init__(self, fpga_port, stm_port):
         super().__init__()
-        # self.TARGET_W, self.TARGET_H = 176, 240
-        self.TARGET_W, self.TARGET_H = W, H
+        self.TARGET_W, self.TARGET_H = W, H     # Default target size is defined in config.py
 
         # 매니저 초기화
         self.fpga_manager = FPGAUartManager(fpga_port)
@@ -133,6 +132,58 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(content_layout)
         self.setCentralWidget(central_widget)
 
+    ## Automatic Image size and canvas management methods
+
+    def _recalc_display_geometry(self):
+        """Recalculate DISPLAY_W/H and SCALE based on current TARGET_W/H"""
+        screen_geo = QApplication.primaryScreen().availableGeometry()
+        display_h = int(screen_geo.height() * 0.52)
+
+        self.SCALE = display_h / self.TARGET_H
+        self.DISPLAY_W = int(self.TARGET_W * self.SCALE)
+        self.DISPLAY_H = display_h
+
+
+    def _rebuild_paint_canvas(self):
+        """Rebuild the PaintCanvas in the sketch tab based on the current TARGET/DISPLAY sizes"""
+        # The paint_tab layout was created as p_lay in init_ui().
+        # Find and replace the parent layout containing self.paint_canvas
+        parent_layout = self.paint_canvas.parentWidget().layout()
+
+        # Remove and delete the old canvas
+        parent_layout.removeWidget(self.paint_canvas)
+        self.paint_canvas.setParent(None)
+        self.paint_canvas.deleteLater()
+
+        # Create a new canvas
+        self.paint_canvas = PaintCanvas(self.TARGET_W, self.TARGET_H, self.DISPLAY_W, self.DISPLAY_H)
+        parent_layout.addWidget(self.paint_canvas, alignment=Qt.AlignmentFlag.AlignCenter)
+
+
+    def _apply_new_target_size(self, w: int, h: int):
+        """Update TARGET_W/H and related UI based on image resolution"""
+        # Prevent zero/negative values
+        if w <= 0 or h <= 0:
+            raise ValueError(f"Invalid image size: {w}x{h}")
+
+        self.TARGET_W, self.TARGET_H = w, h
+        # print(w, h)
+        print(self.TARGET_W, self.TARGET_H)
+        self._recalc_display_geometry()
+
+        # Resize tabs and preview areas
+        self.tabs.setFixedSize(self.DISPLAY_W + 60, self.DISPLAY_H + 125)
+        self.label_preview.setFixedSize(self.DISPLAY_W, self.DISPLAY_H)
+        self.label_camera_status.setFixedSize(self.DISPLAY_W, self.DISPLAY_H)
+
+        # Rebuild the sketch canvas
+        self._rebuild_paint_canvas()
+
+        # Adjust main window size
+        self.adjustSize()
+
+
+
     def _get_next_index(self):
         idx = 0
         while os.path.exists(f"images/image_{idx}.mem") or \
@@ -158,7 +209,8 @@ class MainWindow(QMainWindow):
 
         success = self.fpga_manager.receive_only_mode(
             save_path,
-            lambda p: self.label_camera_status.setText(f"데이터 수신 중... {p}%")
+            lambda p: self.label_camera_status.setText(f"데이터 수신 중... {p}%"),
+            target_size=(self.TARGET_W * self.TARGET_H)
         )
         if success:
             self.label_camera_status.setText(f"✅ 수신 완료!\n파일: {os.path.basename(save_path)}")
@@ -186,10 +238,28 @@ class MainWindow(QMainWindow):
 
     def load_image(self):
         fname, _ = QFileDialog.getOpenFileName(self, '이미지 선택', '', 'Images (*.png *.jpg *.bmp)')
-        if fname:
+        if not fname:
+            return
+
+        try:
+            # 1) 이미지 실제 해상도 읽기
+            with Image.open(fname) as im:
+                w, h = im.size
+
+            # 2) TARGET/DISPLAY/UI 일괄 갱신
+            self._apply_new_target_size(w, h)
+
+            # 3) 경로 저장 및 프리뷰 표시
             self.upload_img_path = fname
-            pixmap = QPixmap(fname).scaled(self.DISPLAY_W, self.DISPLAY_H, Qt.AspectRatioMode.KeepAspectRatio)
+            pixmap = QPixmap(fname).scaled(
+                self.DISPLAY_W, self.DISPLAY_H,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
             self.label_preview.setPixmap(pixmap)
+
+        except Exception as e:
+            QMessageBox.critical(self, "오류", f"이미지 로드 실패: {e}")
 
     def process_and_start(self):
         idx = 0
@@ -235,17 +305,17 @@ class MainWindow(QMainWindow):
                 save_packed_1bpp=True,
             )
 
-
+            ########### FPGA FLOW (Disabled 01.13.2026) ###########
             # self.btn_start.setText("FPGA 데이터 송신 중...")
             # QApplication.processEvents()
 
-            # if self.fpga_manager.save_as_mem(img, paths['mem']):
+            # if self.fpga_manager.save_as_mem(img, paths['mem'], target_size=(self.TARGET_W, self.TARGET_H)):
             #     def fpga_cb(p):
             #         self.btn_start.setText(f"FPGA 처리 중... {p}%")
             #         QApplication.processEvents()
 
             #     success = self.fpga_manager.process_serial_communication(
-            #         paths['mem'], paths['filtered'], fpga_cb
+            #         paths['mem'], paths['filtered'], fpga_cb, target_size=(self.TARGET_W * self.TARGET_H)
             #     )
 
             #     if success:
@@ -260,7 +330,7 @@ class MainWindow(QMainWindow):
                 self.btn_start.setText("이미지 처리 중...")
                 QApplication.processEvents()
 
-                run_pipeline(receive_path=paths['filtered'], command_path=paths['commands'])
+                run_pipeline(w=self.TARGET_W, h=self.TARGET_H, receive_path=paths['filtered'], command_path=paths['commands'])
                 print("main_pipeline runner finished")
             else:
                 raise Exception("Text file for main pipeline not found.")
