@@ -1,9 +1,11 @@
-`timescale 1ns / 1ps
-
 module OV7670_Top #(
-    parameter IMG_WIDTH  = 320,
-    parameter IMG_HEIGHT = 240,
-    parameter ADDR_WIDTH = $clog2(IMG_WIDTH * IMG_HEIGHT)
+    parameter DATA_WIDTH  = 8,
+    parameter RGB_WIDTH   = 16,
+    parameter IMG_WIDTH   = 320,
+    parameter IMG_HEIGHT  = 240,
+    parameter CROP_WIDTH  = 176,
+    parameter CROP_HEIGHT = 240,
+    parameter ADDR_WIDTH  = $clog2(CROP_WIDTH * CROP_HEIGHT)
 ) (
     input  logic                  clk,
     input  logic                  reset,
@@ -12,10 +14,10 @@ module OV7670_Top #(
     input  logic                  pclk,
     input  logic                  href,
     input  logic                  vsync,
-    input  logic [           7:0] data,
+    input  logic [DATA_WIDTH-1:0] data,
     output logic                  we,
     output logic [ADDR_WIDTH-1:0] wAddr,
-    output logic [          15:0] wData
+    output logic [ RGB_WIDTH-1:0] wData
 );
 
     SCCB_Interface U_SCCB_Intf (
@@ -26,8 +28,11 @@ module OV7670_Top #(
     );
 
     OV7670_Capture #(
-        .IMG_WIDTH (IMG_WIDTH),
-        .IMG_HEIGHT(IMG_HEIGHT)
+        .DATA_WIDTH (DATA_WIDTH),
+        .IMG_WIDTH  (IMG_WIDTH),
+        .IMG_HEIGHT (IMG_HEIGHT),
+        .CROP_WIDTH (CROP_WIDTH),
+        .CROP_HEIGHT(CROP_HEIGHT)
     ) U_OV7670_Mem_Ctrl (
         .pclk (pclk),
         .reset(reset),

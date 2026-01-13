@@ -9,7 +9,7 @@ module VGA_Syncher (
     output logic [9:0] x_pixel,
     output logic [9:0] y_pixel
 );
-    logic pclk;
+
     logic [9:0] h_counter, v_counter;
 
     Pixel_Counter U_Pixel_Counter (
