@@ -2,8 +2,8 @@
 
 module RX_RAM #(
     parameter RGB_WIDTH    = 24,
-    parameter IMG_WIDTH    = 176,  //176
-    parameter IMG_HEIGHT   = 240,  //240
+    parameter IMG_WIDTH    = 80,  //176
+    parameter IMG_HEIGHT   = 120,  //240
     parameter TOTAL_PIXELS = IMG_WIDTH * IMG_HEIGHT,
     parameter ADDR_WIDTH   = $clog2(TOTAL_PIXELS)
 ) (
@@ -27,8 +27,10 @@ module RX_RAM #(
         if (we) mem[wAddr] <= wData;
     end
 
+    assign imgData = (oe) ? mem[rAddr] : 0;
+/*
     always_ff @(posedge clk) begin
         if (oe) imgData <= mem[rAddr];
-    end
+    end */
 
 endmodule

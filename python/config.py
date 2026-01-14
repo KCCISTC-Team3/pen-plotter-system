@@ -10,7 +10,7 @@ BAUD = 115200           # Baud Rate (fixed)
 
 # Image dimensions and payload length
 # W, H = 405, 397         # Image width and height in pixels (only for test script)
-W, H = 290, 339         # Image width and height in pixels (only for test script)
+W, H = 80, 120         # Image width and height in pixels (only for test script)
 # PAYLOAD_LEN = (W * H + 7) // 8  # Payload length in bytes, ceiling division
 
 # FPGA communication settings

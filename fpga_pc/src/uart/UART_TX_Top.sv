@@ -3,8 +3,8 @@
 module UART_TX_Top #(
     parameter DATA_WIDTH   = 8,
     parameter FIFO_DEPTH   = 5,
-    parameter IMG_WIDTH    = 10,  // 176  
-    parameter IMG_HEIGHT   = 10,  // 240
+    parameter IMG_WIDTH    = 80,  // 176  
+    parameter IMG_HEIGHT   = 120,  // 240
     parameter TOTAL_PIXELS = IMG_WIDTH * IMG_HEIGHT,
     parameter TOTAL_BYTES  = TOTAL_PIXELS >> 3,
     // parameter ADDR_WIDTH   = $clog2(TOTAL_BYTES),

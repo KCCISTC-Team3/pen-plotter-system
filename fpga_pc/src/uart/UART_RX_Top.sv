@@ -15,11 +15,14 @@ module UART_RX_Top #(
     output logic [   3*DATA_WIDTH-1:0] rgb_data,
     output logic                       pixel_done,
     output logic [PIXEL_CNT_WIDTH-1:0] pixel_cnt,
-    output logic                       frame_done
+    output logic                       frame_done,
+    output logic rx_done // tb 용
 );
     logic [DATA_WIDTH-1:0] pop_data;
     logic                  empty;
-    logic                  rx_done;
+    logic                  w_rx_done;
+
+    assign rx_done = w_rx_done;
 
     UART_RX_FIFO #(
         .DATA_WIDTH(DATA_WIDTH),
@@ -30,7 +33,7 @@ module UART_RX_Top #(
         .rx      (rx),
         .empty   (empty),
         .pop_data(pop_data),
-        .rx_done (rx_done)
+        .rx_done (w_rx_done)
     );
 
     Data_Assembly_FSM #(

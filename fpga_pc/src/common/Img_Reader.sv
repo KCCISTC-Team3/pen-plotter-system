@@ -11,7 +11,7 @@ module Img_Reader #(
     input  logic                  reset,
     input  logic                  start_read,
     input  logic [ RGB_WIDTH-1:0] img,
-    output logic [ADDR_WIDTH-1:0] addr,
+    output logic [ADDR_WIDTH-1:0] addr, // raddr
     output logic                  o_de,
     output logic                  re,
     output logic [DATA_WIDTH-1:0] r_port,
@@ -49,10 +49,17 @@ module Img_Reader #(
     end
 
     assign addr = reading ? (y_cnt * IMG_WIDTH + x_cnt) : '0;
+/*
+    always_ff @(posedge clk ) begin
+        if(reset) addr <=0;
+        else addr <= reading ? (y_cnt * IMG_WIDTH + x_cnt) : '0;
+    end */
+
+    assign re = reading;
 
     always_ff @(posedge clk) begin
-        re   <= reading;
-        o_de <= re;
+       // re   <= reading; // ram
+        o_de <= re; // 이미지
     end
 
     assign reg_rgb_data = re ? img : '0;

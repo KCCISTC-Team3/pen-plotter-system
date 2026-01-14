@@ -12,7 +12,7 @@ module Data_Assembly_FSM #(
     input                              cam_mode, // 1: camera, 0: uart
     output logic [   3*DATA_WIDTH-1:0] rgb_data,
     output logic                       pixel_done,
-    output logic [PIXEL_CNT_WIDTH-1:0] pixel_cnt,
+    output logic [PIXEL_CNT_WIDTH-1:0] pixel_cnt, 
     output logic                       frame_done
 );
     typedef enum logic [2:0] {
@@ -86,16 +86,18 @@ module Data_Assembly_FSM #(
                 state_next = ST_ASSEMBLE;
             end
             ST_ASSEMBLE: begin
-                if (~empty & (pixel_cnt < (TOTAL_PIXELS - 1))) begin
+                if (~empty & (pixel_cnt < (TOTAL_PIXELS-1 ))) begin
                     pixel_done     = 1'b1;
                     state_next     = ST_R;
                     pixel_cnt_next = pixel_cnt + 1;
-                end else if (pixel_cnt == (TOTAL_PIXELS - 1)) begin
+                end else if (pixel_cnt == (TOTAL_PIXELS-1 )) begin
+                    pixel_done     = 1'b1;
                     frame_done     = 1'b1;
                     state_next     = ST_IDLE;
                     pixel_cnt_next = '0;
                 end
             end
+
             ST_CAM_MODE: begin
                 frame_done     = 1'b1;
                 state_next     = ST_IDLE;

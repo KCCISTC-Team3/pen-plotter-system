@@ -9,8 +9,8 @@ module PenPlotter_PC (
     localparam DATA_WIDTH = 8;
     localparam RGB_WIDTH = DATA_WIDTH * 3;
     localparam FIFO_DEPTH = 5;
-    localparam IMG_WIDTH = 176;    //176
-    localparam IMG_HEIGHT = 240;   //240
+    localparam IMG_WIDTH = 80;    //176
+    localparam IMG_HEIGHT = 120;   //240
     localparam TH_HIGH = 240;
     localparam TH_LOW = 120;
 
@@ -68,6 +68,24 @@ module PenPlotter_PC (
         .imgData     (read_img_data)
     );
 
+    Img_Reader #(
+        .RGB_WIDTH (RGB_WIDTH),
+        .DATA_WIDTH(DATA_WIDTH),
+        .IMG_WIDTH (IMG_WIDTH),
+        .IMG_HEIGHT(IMG_HEIGHT)
+    ) U_Img_Reader (
+        .clk       (clk),
+        .reset     (reset),
+        .start_read(frame_done_delayed),
+        .img       (read_img_data),
+        .addr      (read_addr),
+        .re        (oe),
+        .o_de      (DE),
+        .r_port    (o_r),
+        .g_port    (o_g),
+        .b_port    (o_b)
+    );
+
     Edge_Detection_Top #(
         .WIDTH  (DATA_WIDTH),
         .H_RES  (IMG_WIDTH),
@@ -88,23 +106,7 @@ module PenPlotter_PC (
         .o_data  (canny_data)
     );
 
-    Img_Reader #(
-        .RGB_WIDTH (RGB_WIDTH),
-        .DATA_WIDTH(DATA_WIDTH),
-        .IMG_WIDTH (IMG_WIDTH),
-        .IMG_HEIGHT(IMG_HEIGHT)
-    ) U_Img_Reader (
-        .clk       (clk),
-        .reset     (reset),
-        .start_read(frame_done_delayed),
-        .img       (read_img_data),
-        .addr      (read_addr),
-        .re        (oe),
-        .o_de      (DE),
-        .r_port    (o_r),
-        .g_port    (o_g),
-        .b_port    (o_b)
-    );
+    
 
     UART_TX_Top #(
         .DATA_WIDTH(DATA_WIDTH),
