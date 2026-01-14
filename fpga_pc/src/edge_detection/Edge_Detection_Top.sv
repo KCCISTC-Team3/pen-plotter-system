@@ -2,7 +2,7 @@
 
 module Edge_Detection_Top #(
     parameter WIDTH   = 8,
-    parameter H_RES   = 80,
+    parameter H_RES   = 176,
     parameter TH_HIGH = 240,
     parameter TH_LOW  = 120
 ) (
@@ -85,7 +85,7 @@ module Edge_Detection_Top #(
         .o_data (sobel_data)
     );
 
-    Canny #(
+    Canny_Edge #(
         .WIDTH  (WIDTH),
         .H_RES  (H_RES),
         .TH_HIGH(TH_HIGH),

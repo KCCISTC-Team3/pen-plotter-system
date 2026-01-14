@@ -2,7 +2,7 @@
 
 module Sobel #(
     parameter WIDTH = 8,
-    parameter H_RES = 80
+    parameter H_RES = 176
 )(
     input  logic             clk,
     input  logic             rstn,

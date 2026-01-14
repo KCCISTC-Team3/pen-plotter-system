@@ -2,7 +2,7 @@
 
 module TX_RAM #(
     parameter DATA_WIDTH  = 8,
-    parameter TOTAL_PIXELS = 9600,
+    parameter TOTAL_PIXELS = 42240,
     parameter ADDR_WIDTH  = $clog2(TOTAL_PIXELS)
 ) (
     input  logic                  clk,

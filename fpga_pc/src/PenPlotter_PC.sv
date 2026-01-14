@@ -9,8 +9,8 @@ module PenPlotter_PC (
     localparam DATA_WIDTH = 8;
     localparam RGB_WIDTH = DATA_WIDTH * 3;
     localparam FIFO_DEPTH = 5;
-    localparam IMG_WIDTH = 80;    //176
-    localparam IMG_HEIGHT = 120;   //240
+    localparam IMG_WIDTH = 176;    //176
+    localparam IMG_HEIGHT = 240;   //240
     localparam TH_HIGH = 240;
     localparam TH_LOW = 120;
 
