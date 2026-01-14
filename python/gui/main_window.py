@@ -291,38 +291,38 @@ class MainWindow(QMainWindow):
             QApplication.processEvents()
 
             # Use filtered_hex_img_gen to process and save .mem file (not using FPGA now)
-            from image_processing.filtered_hex_img_gen import process_and_save
-            process_and_save(
-                paths['source'],
-                out_dir="images",
-                idx=idx,
-                gaussian_ksize=5,
-                gaussian_sigma=1.0,
-                sobel_ksize=3,
-                canny_low=50,
-                canny_high=150,
-                hex_mode="stream",      # "stream" or "tokens"
-                save_packed_1bpp=True,
-            )
+            # from image_processing.filtered_hex_img_gen import process_and_save
+            # process_and_save(
+            #     paths['source'],
+            #     out_dir="images",
+            #     idx=idx,
+            #     gaussian_ksize=5,
+            #     gaussian_sigma=1.0,
+            #     sobel_ksize=3,
+            #     canny_low=50,
+            #     canny_high=150,
+            #     hex_mode="stream",      # "stream" or "tokens"
+            #     save_packed_1bpp=True,
+            # )
 
             ########### FPGA FLOW (Disabled 01.13.2026) ###########
-            # self.btn_start.setText("FPGA 데이터 송신 중...")
-            # QApplication.processEvents()
+            self.btn_start.setText("FPGA 데이터 송신 중...")
+            QApplication.processEvents()
 
-            # if self.fpga_manager.save_as_mem(img, paths['mem'], target_size=(self.TARGET_W, self.TARGET_H)):
-            #     def fpga_cb(p):
-            #         self.btn_start.setText(f"FPGA 처리 중... {p}%")
-            #         QApplication.processEvents()
+            if self.fpga_manager.save_as_mem(img, paths['mem'], target_size=(self.TARGET_W, self.TARGET_H)):
+                def fpga_cb(p):
+                    self.btn_start.setText(f"FPGA 처리 중... {p}%")
+                    QApplication.processEvents()
 
-            #     success = self.fpga_manager.process_serial_communication(
-            #         paths['mem'], paths['filtered'], fpga_cb, target_size=(self.TARGET_W * self.TARGET_H)
-            #     )
+                success = self.fpga_manager.process_serial_communication(
+                    paths['mem'], paths['filtered'], fpga_cb, target_size=(self.TARGET_W * self.TARGET_H)
+                )
 
-            #     if success:
-            #         self.fpga_manager.convert_hex_to_binary_text(paths['filtered'], paths['binary'])
-            #         print("FPGA communication finished")
-            #     else:
-            #         raise Exception("FPGA communication failed")
+                if success:
+                    self.fpga_manager.convert_hex_to_binary_text(paths['filtered'], paths['binary'])
+                    print("FPGA communication finished")
+                else:
+                    raise Exception("FPGA communication failed")
             
 
             ## Main pipeline runner (Added 01.10.2026)
