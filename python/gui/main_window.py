@@ -14,7 +14,7 @@ from io_utils.stm32_uart import STM32UartManager
 
 from config import *
 from main_pipeline import run_pipeline
-
+from PyQt6.QtCore import Qt, QTimer
 
 class MainWindow(QMainWindow):
     def __init__(self, fpga_port, stm_port):
@@ -96,24 +96,33 @@ class MainWindow(QMainWindow):
         # Tab 3: 카메라 수신
         camera_tab = QWidget()
         c_lay = QVBoxLayout(camera_tab)
-        self.label_camera_status = QLabel("카메라 탭을 선택하면 수신을 시작합니다.")
+
+        self.label_camera_status = QLabel("카메라 모드입니다. 트리거 버튼을 누르면 수신을 시작합니다.")
         self.label_camera_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_camera_status.setObjectName("preview_area")
         self.label_camera_status.setFixedSize(self.DISPLAY_W, self.DISPLAY_H)
+
+        # [신규] AA 트리거 송신 버튼
+        self.btn_trigger_aa = QPushButton("FPGA 트리거 송신 (0xAA)")
+        self.btn_trigger_aa.setFixedHeight(50)
+        self.btn_trigger_aa.clicked.connect(self.start_camera_trigger)  # 신규 메서드 연결
+
         self.btn_send_camera_stm = QPushButton("STM32로 좌표 전송 시작")
         self.btn_send_camera_stm.setObjectName("start_btn")
         self.btn_send_camera_stm.setFixedHeight(55)
         self.btn_send_camera_stm.setVisible(False)
         self.btn_send_camera_stm.clicked.connect(self.send_camera_commands_to_stm)
+
         c_lay.addStretch()
         c_lay.addWidget(self.label_camera_status, alignment=Qt.AlignmentFlag.AlignCenter)
+        c_lay.addWidget(self.btn_trigger_aa)  # 트리거 버튼 배치
         c_lay.addWidget(self.btn_send_camera_stm)
         c_lay.addStretch()
 
         # 5. 탭 추가
         self.tabs.addTab(upload_tab, " 이미지 로드 ")
         self.tabs.addTab(paint_tab, " 실시간 스케치 ")
-        self.tabs.addTab(camera_tab, " 카메라 수신 ")
+        self.tabs.addTab(camera_tab, " 카메라 모드 ")
 
         # 6. [중요] 모든 탭 구성이 끝난 후 이벤트를 연결!
         self.tabs.currentChanged.connect(self.on_tab_changed)
@@ -199,27 +208,85 @@ class MainWindow(QMainWindow):
         self.btn_start.setVisible(index != 2)
 
         if index == 2:
-            self.run_camera_mode()
+            # 탭 이동 시 수신 대기 상태 안내만 표시
+            self.label_camera_status.setText("트리거(AA)를 송신하려면 버튼을 누르세요.")
+            self.btn_trigger_aa.setEnabled(True)
+
+            #self.run_camera_mode()
+            #QTimer.singleShot(200, self.run_camera_mode)
+
+    def start_camera_trigger(self):
+        """사용자 버튼 클릭 시 실행: 통합 모드 호출"""
+        try:
+            self.btn_trigger_aa.setEnabled(False)
+            self.label_camera_status.setText("📡 FPGA 트리거 송신 및 수신 시작...")
+            QApplication.processEvents()
+
+            # 별도의 송신 없이, 통합 메서드 하나만 호출합니다.
+            idx = self._get_next_index()
+            save_path = f"images/filter_{idx}.mem"
+
+            # 이 함수 안에서 AA를 쏘고 바로 수신까지 처리합니다.
+            success = self.fpga_manager.trigger_and_receive_mode(
+                save_path,
+                lambda p: self.label_camera_status.setText(f"데이터 수신 중... {p}%"),
+                target_size=(self.TARGET_W * self.TARGET_H)
+            )
+
+            if success:
+                self.label_camera_status.setText(f"✅ 완료! 파일: {os.path.basename(save_path)}")
+                self.btn_send_camera_stm.setVisible(True)
+            else:
+                raise Exception("통신 실패 또는 타임아웃")
+
+        except Exception as e:
+            QMessageBox.critical(self, "통신 에러", str(e))
+            self.btn_trigger_aa.setEnabled(True)
 
     def run_camera_mode(self):
+        """FPGA에 트리거(AA)를 송신하고 즉시 데이터를 수신하는 통합 로직"""
+        # 버튼 중복 클릭 방지
+        self.btn_trigger_aa.setEnabled(False)
+
         idx = self._get_next_index()
         save_path = f"images/filter_{idx}.mem"
-        self.label_camera_status.setText("📷 FPGA 데이터 수신 대기 중...")
+
+        # 1. 상태 표시 업데이트
+        self.label_camera_status.setText("📷 FPGA 트리거 송신 및 수신 대기 중...")
         QApplication.processEvents()
 
-        success = self.fpga_manager.receive_only_mode(
+        # 2. [수정 포인트] 통합된 메서드 호출 (AA 송신 + 데이터 수신)
+        # 이 내부에서 AA를 쏘고 바로 수신 루프에 진입해야 데이터 유실이 없습니다.
+        success = self.fpga_manager.trigger_and_receive_mode(
             save_path,
             lambda p: self.label_camera_status.setText(f"데이터 수신 중... {p}%"),
             target_size=(self.TARGET_W * self.TARGET_H)
         )
+
+        # 3. 결과 처리
         if success:
+            with open(save_path, 'r') as f:
+                hex_data = f.read().split()
+            pixels = [(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)) for h in hex_data]
+            img_preview = Image.new("RGB", (self.TARGET_W, self.TARGET_H))
+            img_preview.putdata(pixels)
+
+            from PIL.ImageQt import ImageQt
+            qimg = ImageQt(img_preview)
+            pixmap = QPixmap.fromImage(qimg).scaled(self.DISPLAY_W, self.DISPLAY_H, Qt.AspectRatioMode.KeepAspectRatio)
+            self.label_camera_status.setPixmap(pixmap)
+
             self.label_camera_status.setText(f"✅ 수신 완료!\n파일: {os.path.basename(save_path)}")
             self.btn_send_camera_stm.setVisible(True)
         else:
+            # 타임아웃이나 중단 시 처리
             if not self.fpga_manager.is_receiving:
                 self.label_camera_status.setText("수신이 중단되었습니다.")
             else:
-                self.label_camera_status.setText("❌ 수신 오류 발생")
+                self.label_camera_status.setText("❌ 수신 실패 (타임아웃 또는 보드 무응답)")
+
+            # 실패 시 다시 시도할 수 있도록 버튼 활성화
+            self.btn_trigger_aa.setEnabled(True)
 
     def send_camera_commands_to_stm(self):
         path = "out_commands.txt"
@@ -246,8 +313,8 @@ class MainWindow(QMainWindow):
             with Image.open(fname) as im:
                 w, h = im.size
 
-            # 2) TARGET/DISPLAY/UI 일괄 갱신
-            self._apply_new_target_size(w, h)
+            # # 2) TARGET/DISPLAY/UI 일괄 갱신
+            # self._apply_new_target_size(w, h)
 
             # 3) 경로 저장 및 프리뷰 표시
             self.upload_img_path = fname
@@ -275,41 +342,60 @@ class MainWindow(QMainWindow):
         }
 
         try:
-            if self.tabs.currentIndex() == 0:
+            if self.tabs.currentIndex() == 0: # 이미지 로드 탭
                 if not self.upload_img_path: raise Exception("이미지를 먼저 로드하세요.")
                 img = Image.open(self.upload_img_path)
-            else:
+            elif self.tabs.currentIndex() == 1: # 스케치 탭
                 qimg = self.paint_canvas.get_image()
                 ptr = qimg.bits()
                 ptr.setsize(qimg.height() * qimg.width() * 4)
                 img = Image.frombuffer("RGBA", (qimg.width(), qimg.height()), ptr, 'raw', "RGBA", 0, 1).convert("RGB")
+            elif self.tabs.currentIndex() == 2: # 카메라 수신 탭
+                current_idx = self._get_next_index() - 1
+                recent_mem = f"images/filter_{current_idx}.mem"
+                if not os.path.exists(recent_mem):
+                    raise Exception("수신된 카메라 데이터 파일이 없습니다.")
 
-            img.save(paths['source'])
+                # 2. RGB888 텍스트 데이터를 읽어 이미지 객체로 복원
+                with open(recent_mem, 'r') as f:
+                    hex_data = f.read().split()  # 'ffffff' 단위로 분리
+
+                # 수신된 hex를 (R, G, B) 튜플 리스트로 변환
+                pixels = [(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)) for h in hex_data]
+
+                # 3. 이미지 객체 생성 (176x240 규격)
+                img = Image.new("RGB", (self.TARGET_W, self.TARGET_H))
+                img.putdata(pixels)
+
+            print(f"resize: {self.TARGET_W}*{self.TARGET_H}")
+            img_resized = img.resize((176, 240), Image.Resampling.LANCZOS)
+
+            img_resized.save(paths['source'])
             self.btn_start.setEnabled(False)
 
             self.btn_start.setText("처리 중...")
             QApplication.processEvents()
 
             # Use filtered_hex_img_gen to process and save .mem file (not using FPGA now)
-            # from image_processing.filtered_hex_img_gen import process_and_save
-            # process_and_save(
-            #     paths['source'],
-            #     out_dir="images",
-            #     idx=idx,
-            #     gaussian_ksize=5,
-            #     gaussian_sigma=1.0,
-            #     sobel_ksize=3,
-            #     canny_low=50,
-            #     canny_high=150,
-            #     hex_mode="stream",      # "stream" or "tokens"
-            #     save_packed_1bpp=True,
-            # )
+            from image_processing.filtered_hex_img_gen import process_and_save
+            process_and_save(
+                paths['source'],
+                out_dir="images",
+                idx=idx,
+                gaussian_ksize=5,
+                gaussian_sigma=1.0,
+                sobel_ksize=3,
+                canny_low=50,
+                canny_high=150,
+                hex_mode="stream",      # "stream" or "tokens"
+                save_packed_1bpp=True,
+            )
 
             ########### FPGA FLOW (Disabled 01.13.2026) ###########
             self.btn_start.setText("FPGA 데이터 송신 중...")
             QApplication.processEvents()
 
-            if self.fpga_manager.save_as_mem(img, paths['mem'], target_size=(self.TARGET_W, self.TARGET_H)):
+            if self.fpga_manager.save_as_mem(img_resized, paths['mem'], target_size=(self.TARGET_W, self.TARGET_H)):
                 def fpga_cb(p):
                     self.btn_start.setText(f"FPGA 처리 중... {p}%")
                     QApplication.processEvents()

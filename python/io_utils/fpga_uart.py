@@ -72,38 +72,48 @@ class FPGAUartManager:
         finally:
             ser.close()
 
-    def receive_only_mode(self, save_path, progress_cb=None, target_size=None):
-        """[추가] 카메라 탭용: 트리거 없이 데이터가 올 때까지 대기 및 수신"""
+    def trigger_and_receive_mode(self, save_path, progress_cb=None, target_size=None):
+        """[개선] 0xAA 트리거 송신 직후 즉시 수신 모드로 전환 (카메라 탭용)"""
         self.is_receiving = True
         received_data = bytearray()
-        # target_size = W * H  # 예상 수신 크기
+        start_time = time.time()  # 타임아웃 체크용
 
         try:
-            # 타임아웃을 짧게 주어 루프가 돌면서 중단 플래그를 체크하게 함
+            # 포트를 열고 송수신을 한 세션에서 처리
             ser = serial.Serial(self.port, self.baudrate, timeout=0.1)
 
-            while self.is_receiving and len(received_data) < target_size:
-                if ser.in_waiting > 0:
-                    chunk = ser.read(ser.in_waiting)
-                    received_data.extend(chunk)
-                    if progress_cb:
-                        p = int((len(received_data) / target_size) * 100)
-                        progress_cb(min(p, 100))
+            if ser.is_open:
+                # 1. 트리거(AA) 송신
+                ser.write(bytes.fromhex("AA"))
+                ser.flush()
+                print("Trigger AA sent. Entering receive mode...")
 
-                # 다른 탭 클릭 등의 이벤트를 처리하기 위해 잠시 양보
-                # QCoreApplication.processEvents()
-                time.sleep(0.01)
+                # 2. 즉시 수신 루프 진입
+                while self.is_receiving and len(received_data) < target_size:
+                    # 10초간 데이터가 전혀 오지 않으면 튕김 방지를 위해 탈출
+                    if time.time() - start_time > 10:
+                        print("Timeout: No response from FPGA")
+                        break
 
-            if not self.is_receiving:  # 탭 이동으로 중단된 경우
-                return False
+                    if ser.in_waiting > 0:
+                        chunk = ser.read(ser.in_waiting)
+                        received_data.extend(chunk)
+                        start_time = time.time()  # 데이터가 들어오면 타이머 리셋
 
-            if len(received_data) >= target_size:
-                with open(save_path, "w") as f:
-                    f.write(received_data.hex())
-                return True
+                        if progress_cb:
+                            p = int((len(received_data) / target_size) * 100)
+                            progress_cb(min(p, 100))
+
+                    # GUI가 멈추지 않도록 제어권 반환 (Main 쪽에서 호출 시 필요)
+                    time.sleep(0.001)
+
+                if len(received_data) >= target_size:
+                    with open(save_path, "w") as f:
+                        f.write(received_data.hex())
+                    return True
             return False
         except Exception as e:
-            print(f"수신 에러: {e}")
+            print(f"통신 에러: {e}")
             return False
         finally:
             if 'ser' in locals(): ser.close()
