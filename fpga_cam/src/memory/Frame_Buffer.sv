@@ -7,26 +7,44 @@ module Frame_Buffer #(
     parameter TOTAL_PIXELS = IMG_WIDTH * IMG_HEIGHT,
     parameter ADDR_WIDTH   = $clog2(TOTAL_PIXELS)
 ) (
-    // write side
+    // Write port
     input  logic                  wclk,
     input  logic                  we,
     input  logic [ADDR_WIDTH-1:0] wAddr,
-    input  logic  [ 15:0]  wData,
-    // read side
-    input  logic                  rclk,
-    input  logic                  oe,
-    input  logic [ADDR_WIDTH-1:0] rAddr,
-    output logic  [ 15:0]  rData
+    input  logic [RGB_WIDTH-1:0]  wData,
+    // Read port A
+    input  logic                  rclk_a,
+    input  logic                  oe_a,
+    input  logic [ADDR_WIDTH-1:0] rAddr_a,
+    output logic [RGB_WIDTH-1:0]  rData_a,
+    // Read port B
+    input  logic                  rclk_b,
+    input  logic                  oe_b,
+    input  logic [ADDR_WIDTH-1:0] rAddr_b,
+    output logic [RGB_WIDTH-1:0]  rData_b
 );
-    logic  [ 15:0]  mem[0:TOTAL_PIXELS-1];
 
-    // write side
+    logic [RGB_WIDTH-1:0] mem[0:TOTAL_PIXELS-1];
+
+    // Write
     always_ff @(posedge wclk) begin
-        if (we) mem[wAddr] <= wData;
+        if (we) begin
+            mem[wAddr] <= wData;
+        end
     end
 
-    // read side port A
-    always_ff @(posedge rclk) begin
-        if (oe) rData <= mem[rAddr];
+    // Read port A
+    always_ff @(posedge rclk_a) begin
+        if (oe_a) begin
+            rData_a <= mem[rAddr_a];
+        end
     end
+
+    // Read port B
+    always_ff @(posedge rclk_b) begin
+        if (oe_b) begin
+            rData_b <= mem[rAddr_b];
+        end
+    end
+
 endmodule

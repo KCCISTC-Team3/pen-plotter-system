@@ -33,7 +33,7 @@ module OV7670_Top #(
         .IMG_HEIGHT (IMG_HEIGHT),
         .CROP_WIDTH (CROP_WIDTH),
         .CROP_HEIGHT(CROP_HEIGHT)
-    ) U_OV7670_Mem_Ctrl (
+    ) U_OV7670_Capture (
         .pclk (pclk),
         .reset(reset),
         .href (href),

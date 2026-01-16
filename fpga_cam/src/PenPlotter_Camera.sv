@@ -3,72 +3,107 @@
 module PenPlotter_Camera (
     input  logic       clk,
     input  logic       reset,
-    // OV7670 side
+    // OV7670 Camera
     output logic       xclk,
     input  logic       pclk,
     input  logic       href,
     input  logic       vsync,
     input  logic [7:0] data,
-    // vga port
-    output logic       h_sync,
-    output logic       v_sync,
-    output logic [3:0] r_port,
-    output logic [3:0] g_port,
-    output logic [3:0] b_port,
     // I2C
     output tri         SCL,
     inout  tri         SDA,
     // Button
     input  logic       cap_btn,
-    input  logic       send_btn
+    // UART
+    input  logic       rx,
+    output logic       tx,
+    output logic       led_capture,
+    output logic       led_sending,
+    // HDMI TMDS out
+    output wire        TMDS_Clk_p,
+    output wire        TMDS_Clk_n,
+    output wire  [2:0] TMDS_Data_p,
+    output wire  [2:0] TMDS_Data_n
 );
+    // ===== Parameters =====
     localparam DATA_WIDTH = 8;
     localparam RGB_WIDTH = DATA_WIDTH * 3;
     localparam IMG_WIDTH = 176;
     localparam IMG_HEIGHT = 240;
     localparam CAM_WIDTH = 320;
     localparam CAM_HEIGHT = 240;
+    localparam ADDR_WIDTH = $clog2(IMG_WIDTH * IMG_HEIGHT);
 
-    localparam TOTAL_PIXELS = IMG_WIDTH * IMG_HEIGHT;
-    localparam ADDR_WIDTH = $clog2(TOTAL_PIXELS);
+    // UART Parameters
+    localparam CLK_FREQ = 125_000_000;
+    localparam BAUDRATE = 115200;
+    localparam SAMPLING = 16;
+    localparam FIFO_DEPTH = 5;
 
-    // Camera signals
+    // ===== Camera Signals =====
     logic [ADDR_WIDTH-1:0] cam_wAddr;
     logic                  cam_we;
     logic [          15:0] cam_wData;
 
-    // VGA signals
+    // ===== VGA Signals =====
     logic [9:0] x_pixel, y_pixel;
-    logic                  DE;
+    logic DE;
+    logic v_sync, h_sync;
 
-    // Video (left) Frame Buffer signals
+    // ===== Video Frame Buffer Signals =====
     logic [ADDR_WIDTH-1:0] video_rAddr;
     logic [          15:0] video_rData;
     logic [DATA_WIDTH-1:0] video_r, video_g, video_b;
 
-    // Capture (right) Frame Buffer signals
-    logic [ADDR_WIDTH-1:0] capture_rAddr;
-    logic [15:0] capture_rData;
+    // ===== Capture Frame Buffer Signals =====
+    logic [ADDR_WIDTH-1:0] capture_rAddr_vga;
+    logic [          15:0] capture_rData_vga;
     logic [DATA_WIDTH-1:0] capture_r, capture_g, capture_b;
 
-    // Capture enable signal
-    logic capture_enable;
+    // Capture Frame Buffer - UART read port
+    logic                  uart_fb_re;
+    logic [ADDR_WIDTH-1:0] uart_fb_rAddr;
+    logic [          15:0] uart_fb_rData;
 
-    // Pixel clock
-    logic pixel_clk;
+    // ===== Capture Control =====
+    logic                  capture_enable;
 
+    // ===== UART Signals =====
+    logic                  b_tick;
+    logic                  cap_send_trig;
+    logic                  sending;
+    logic                  tx_full;
+    logic                  tx_busy;
+    logic                  led_cap_reg;
+
+    // ===== Pixel Clock =====
+    logic                  pixel_clk;
     assign xclk = pixel_clk;
 
+    // ===== LED Control =====
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            led_cap_reg <= 1'b0;
+        end else begin
+            if (cap_send_trig) begin
+                led_cap_reg <= ~led_cap_reg;
+            end
+        end
+    end
+
+    assign led_capture = led_cap_reg;
+    assign led_sending = sending;
+
     // =========================================================================
-    // Capture Controller Module
+    // Capture Controller
     // =========================================================================
     Capture_Controller U_CAPTURE_CTRL (
-        .clk            (clk),
-        .reset          (reset),
-        .pclk           (pclk),
-        .cap_btn        (cap_btn),
-        .vsync          (vsync),
-        .capture_enable (capture_enable)
+        .clk           (clk),
+        .reset         (reset),
+        .pclk          (pclk),
+        .cap_btn       (cap_btn),
+        .vsync         (vsync),
+        .capture_enable(capture_enable)
     );
 
     // =========================================================================
@@ -120,25 +155,32 @@ module PenPlotter_Camera (
     // Video Frame Buffer (Left - Real-time)
     // =========================================================================
     Frame_Buffer #(
-        .RGB_WIDTH (RGB_WIDTH),
+        .RGB_WIDTH (16),
         .IMG_WIDTH (IMG_WIDTH),
         .IMG_HEIGHT(IMG_HEIGHT)
     ) U_Video_Frame_Buffer (
-        .wclk (pclk),
-        .we   (cam_we),
-        .wAddr(cam_wAddr),
-        .wData(cam_wData),
-        .rclk (pixel_clk),
-        .oe   (1'b1),
-        .rAddr(video_rAddr),
-        .rData(video_rData)
+        .wclk   (pclk),
+        .we     (cam_we),
+        .wAddr  (cam_wAddr),
+        .wData  (cam_wData),
+        // Port A: VGA
+        .rclk_a (pixel_clk),
+        .oe_a   (1'b1),
+        .rAddr_a(video_rAddr),
+        .rData_a(video_rData),
+        // Port B: Not used
+        .rclk_b (1'b0),
+        .oe_b   (1'b0),
+        .rAddr_b('0),
+        .rData_b()
     );
 
     // =========================================================================
     // VGA Video Reader (Left)
     // =========================================================================
     VGA_Img_Reader #(
-        // .DATA_WIDTH(DATA_WIDTH),
+        .DATA_WIDTH(8),
+        .RGB_WIDTH (16),
         .IMG_WIDTH (IMG_WIDTH),
         .IMG_HEIGHT(IMG_HEIGHT),
         .POSITION_X(0)
@@ -155,28 +197,35 @@ module PenPlotter_Camera (
     );
 
     // =========================================================================
-    // Capture Frame Buffer (Right - Freeze)
+    // Capture Frame Buffer (Right - Freeze + UART)
     // =========================================================================
     Frame_Buffer #(
-        .RGB_WIDTH (RGB_WIDTH),
+        .RGB_WIDTH (16),
         .IMG_WIDTH (IMG_WIDTH),
         .IMG_HEIGHT(IMG_HEIGHT)
     ) U_Capture_Frame_Buffer (
-        .wclk (pclk),
-        .we   (cam_we & capture_enable),
-        .wAddr(cam_wAddr),
-        .wData(cam_wData),
-        .rclk (pixel_clk),
-        .oe   (1'b1),
-        .rAddr(capture_rAddr),
-        .rData(capture_rData)
+        .wclk   (pclk),
+        .we     (cam_we & capture_enable),
+        .wAddr  (cam_wAddr),
+        .wData  (cam_wData),
+        // Port A: VGA
+        .rclk_a (pixel_clk),
+        .oe_a   (1'b1),
+        .rAddr_a(capture_rAddr_vga),
+        .rData_a(capture_rData_vga),
+        // Port B: UART
+        .rclk_b (clk),
+        .oe_b   (uart_fb_re),
+        .rAddr_b(uart_fb_rAddr),
+        .rData_b(uart_fb_rData)
     );
 
     // =========================================================================
     // VGA Capture Reader (Right)
     // =========================================================================
     VGA_Img_Reader #(
-        // .DATA_WIDTH(DATA_WIDTH),
+        .DATA_WIDTH(8),
+        .RGB_WIDTH (16),
         .IMG_WIDTH (IMG_WIDTH),
         .IMG_HEIGHT(IMG_HEIGHT),
         .POSITION_X(1)
@@ -185,144 +234,96 @@ module PenPlotter_Camera (
         .DE     (DE),
         .x_pixel(x_pixel),
         .y_pixel(y_pixel),
-        .addr   (capture_rAddr),
-        .imgData(capture_rData),
+        .addr   (capture_rAddr_vga),
+        .imgData(capture_rData_vga),
         .r_port (capture_r),
         .g_port (capture_g),
         .b_port (capture_b)
     );
 
     // =========================================================================
-    // VGA Output Mux
+    // UART Baud Generator
+    // =========================================================================
+    UART_BAUD_GEN #(
+        .CLK_FREQ(CLK_FREQ),
+        .BAUDRATE(BAUDRATE),
+        .SAMPLING(SAMPLING)
+    ) U_UART_BAUD_GEN (
+        .clk   (clk),
+        .reset (reset),
+        .b_tick(b_tick)
+    );
+
+    // =========================================================================
+    // UART RX
+    // =========================================================================
+    UART_RX_TOP #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .SAMPLING  (SAMPLING),
+        .ADDR_WIDTH(FIFO_DEPTH)
+    ) U_UART_RX_TOP (
+        .clk          (clk),
+        .reset        (reset),
+        .b_tick       (b_tick),
+        .rx           (rx),
+        .rx_empty     (),
+        .rx_full      (),
+        .cap_send_trig(cap_send_trig)
+    );
+
+    // =========================================================================
+    // UART TX
+    // =========================================================================
+    UART_TX_TOP #(
+        .DATA_WIDTH   (DATA_WIDTH),
+        .RGB_WIDTH    (RGB_WIDTH),
+        .IMG_WIDTH    (IMG_WIDTH),
+        .IMG_HEIGHT   (IMG_HEIGHT),
+        .SAMPLING     (SAMPLING),
+        .ADDR_WIDTH   (FIFO_DEPTH),
+        .FB_ADDR_WIDTH(ADDR_WIDTH)
+    ) U_UART_TX_TOP (
+        .clk          (clk),
+        .reset        (reset),
+        .b_tick       (b_tick),
+        .cap_send_trig(cap_send_trig),
+        // Frame Buffer read
+        .fb_re        (uart_fb_re),
+        .fb_rAddr     (uart_fb_rAddr),
+        .fb_rData     (uart_fb_rData),
+        // UART output
+        .tx_full      (tx_full),
+        .tx_busy      (tx_busy),
+        .sending      (sending),
+        .tx           (tx)
+    );
+
+    // =========================================================================
+    // HDMI Output
+    // =========================================================================
+    logic [23:0] vid_pData;
+
+    rgb2dvi_0 u_hdmi (
+        .TMDS_Clk_p (TMDS_Clk_p),
+        .TMDS_Clk_n (TMDS_Clk_n),
+        .TMDS_Data_p(TMDS_Data_p),
+        .TMDS_Data_n(TMDS_Data_n),
+        .aRst       (reset),
+        .vid_pData  (vid_pData),
+        .vid_pVDE   (DE),
+        .vid_pHSync (h_sync),
+        .vid_pVSync (v_sync),
+        .PixelClk   (pixel_clk)
+    );
+
+    // =========================================================================
+    // Output Mux
     // =========================================================================
     always_comb begin
         if (x_pixel < 320) begin
-            r_port = video_r[7:4];
-            g_port = video_g[7:4];
-            b_port = video_b[7:4];
+            vid_pData = {video_r, video_b, video_g};
         end else begin
-            r_port = capture_r[7:4];
-            g_port = capture_g[7:4];
-            b_port = capture_b[7:4];
-        end
-    end
-
-endmodule
-
-// =========================================================================
-// Capture Controller Module
-// Handles button debounce, CDC, and capture state machine
-// =========================================================================
-module Capture_Controller (
-    input  logic clk,            // System clock
-    input  logic reset,
-    input  logic pclk,           // Pixel clock (camera domain)
-    input  logic cap_btn,        // Capture button input
-    input  logic vsync,          // Camera vsync signal
-    output logic capture_enable  // Capture enable output (pclk domain)
-);
-
-    // Button debounce
-    logic cap_btn_debounced;
-    Button_Debounce #(.SIZE(16)) U_BTN_DB (
-        .clk(clk), .reset(reset), .btn_in(cap_btn), .btn_out(cap_btn_debounced)
-    );
-
-    // clk domain signals
-    logic capture_request;
-    logic capture_done_synced;
-
-    // pclk domain signals
-    logic capture_request_sync1, capture_request_sync2;
-    logic capture_request_synced;
-    logic capture_pending;
-    logic capture_done;
-    logic vsync_prev;
-    logic vsync_falling;
-
-    // CDC: pclk -> clk (capture done feedback)
-    logic capture_done_sync1, capture_done_sync2;
-
-    // =========================================================================
-    // Capture Request Level Signal (clk domain)
-    // =========================================================================
-    always_ff @(posedge clk) begin
-        if (reset) begin
-            capture_request <= 1'b0;
-        end else begin
-            if (cap_btn_debounced) begin
-                capture_request <= 1'b1;
-            end else if (capture_done_synced) begin
-                capture_request <= 1'b0;
-            end
-        end
-    end
-
-    // =========================================================================
-    // CDC: clk -> pclk (Double FF Synchronizer)
-    // =========================================================================
-    always_ff @(posedge pclk) begin
-        if (reset) begin
-            capture_request_sync1 <= 1'b0;
-            capture_request_sync2 <= 1'b0;
-        end else begin
-            capture_request_sync1 <= capture_request;
-            capture_request_sync2 <= capture_request_sync1;
-        end
-    end
-
-    assign capture_request_synced = capture_request_sync2;
-
-    // =========================================================================
-    // CDC: pclk -> clk (capture done feedback)
-    // =========================================================================
-    always_ff @(posedge clk) begin
-        if (reset) begin
-            capture_done_sync1 <= 1'b0;
-            capture_done_sync2 <= 1'b0;
-        end else begin
-            capture_done_sync1 <= capture_done;
-            capture_done_sync2 <= capture_done_sync1;
-        end
-    end
-
-    assign capture_done_synced = capture_done_sync2;
-
-    // =========================================================================
-    // Vsync Falling Edge Detection (pclk domain)
-    // =========================================================================
-    always_ff @(posedge pclk) begin
-        if (reset) begin
-            vsync_prev    <= 1'b1;
-            vsync_falling <= 1'b0;
-        end else begin
-            vsync_prev    <= vsync;
-            vsync_falling <= ~vsync & vsync_prev;
-        end
-    end
-
-    // =========================================================================
-    // Capture State Machine (pclk domain)
-    // IDLE -> PENDING -> CAPTURING -> IDLE
-    // =========================================================================
-    always_ff @(posedge pclk) begin
-        if (reset) begin
-            capture_pending <= 1'b0;
-            capture_enable  <= 1'b0;
-            capture_done    <= 1'b0;
-        end else begin
-            capture_done <= 1'b0;
-            if (capture_request_synced && !capture_pending && !capture_enable) begin
-                capture_pending <= 1'b1;
-            end else if (vsync_falling && capture_pending) begin
-                capture_enable  <= 1'b1;
-                capture_pending <= 1'b0;
-            end else if (vsync_falling && capture_enable) begin
-                capture_enable <= 1'b0;
-                capture_done   <= 1'b1;
-            end else if (!capture_request_synced && capture_pending) begin
-                capture_pending <= 1'b0;
-            end
+            vid_pData = {capture_r, capture_b, capture_g};
         end
     end
 

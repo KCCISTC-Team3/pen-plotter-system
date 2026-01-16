@@ -45,15 +45,17 @@ module VGA_Img_Reader #(
 
     assign addr = addr_reg;
 
-    always_comb begin
-        if (display_en_reg2) begin
-            r_port = {imgData[15:11], 3'b0};
-            g_port = {imgData[10:5], 2'b0};
-            b_port = {imgData[4:0], 3'b0};
-        end else begin
-            r_port = 8'h0;
-            g_port = 8'h0;
-            b_port = 8'h0;
-        end
-    end
+    assign {r_port, g_port, b_port} = display_en_reg2 ? {imgData[15:12], 4'b0, imgData[10:7], 4'b0, imgData[4:1], 4'b0} : 0;
+
+    // always_comb begin
+    //     if (display_en_reg2) begin
+    //         r_port = {imgData[15:12], 4'b0};
+    //         g_port = {imgData[10:7], 4'b0};
+    //         b_port = {imgData[4:1], 4'b0};
+    //     end else begin
+    //         r_port = 8'h0;
+    //         g_port = 8'h0;
+    //         b_port = 8'h0;
+    //     end
+    // end
 endmodule
