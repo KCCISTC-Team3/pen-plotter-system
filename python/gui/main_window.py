@@ -103,22 +103,21 @@ class MainWindow(QMainWindow):
         self.label_camera_status.setObjectName("preview_area")
         self.label_camera_status.setFixedSize(self.DISPLAY_W, self.DISPLAY_H)
 
-        # [신규] AA 트리거 송신 버튼
-        self.btn_trigger_aa = QPushButton("FPGA 트리거 송신 (0xAA)")
-        self.btn_trigger_aa.setFixedHeight(50)
+        # [신규] 카메라 모드 트리거 송신 버튼 - 녹색 스타일
+        self.btn_trigger_aa = QPushButton("데이터 수신 시작")
+        self.btn_trigger_aa.setObjectName("start_btn")  # 녹색 스타일 적용
+        self.btn_trigger_aa.setFixedSize(self.DISPLAY_W + 60, 55)  # 메인 버튼과 동일한 사이즈
         self.btn_trigger_aa.clicked.connect(self.start_camera_trigger)  # 신규 메서드 연결
 
-        self.btn_send_camera_stm = QPushButton("STM32로 좌표 전송 시작")
-        self.btn_send_camera_stm.setObjectName("start_btn")
-        self.btn_send_camera_stm.setFixedHeight(55)
+        self.btn_send_camera_stm = QPushButton("전송 및 플로팅 시작")
+        self.btn_send_camera_stm.setObjectName("start_btn")  # 녹색 스타일 적용
+        self.btn_send_camera_stm.setFixedSize(self.DISPLAY_W + 60, 55)  # 메인 버튼과 동일한 사이즈
         self.btn_send_camera_stm.setVisible(False)
         self.btn_send_camera_stm.clicked.connect(self.send_camera_commands_to_stm)
 
-        c_lay.addStretch()
         c_lay.addWidget(self.label_camera_status, alignment=Qt.AlignmentFlag.AlignCenter)
         c_lay.addWidget(self.btn_trigger_aa)  # 트리거 버튼 배치
         c_lay.addWidget(self.btn_send_camera_stm)
-        c_lay.addStretch()
 
         # 5. 탭 추가
         self.tabs.addTab(upload_tab, " 이미지 로드 ")
@@ -131,7 +130,7 @@ class MainWindow(QMainWindow):
         # 7. 하단 버튼 및 최종 레이아웃 합치기
         self.btn_start = QPushButton("전송 및 플로팅 시작")
         self.btn_start.setObjectName("start_btn")
-        self.btn_start.setFixedHeight(55)
+        self.btn_start.setFixedSize(self.DISPLAY_W + 60, 55)  # 탭과 동일한 너비
         self.btn_start.clicked.connect(self.process_and_start)
 
         content_layout = QVBoxLayout()
@@ -210,7 +209,7 @@ class MainWindow(QMainWindow):
 
         if index == 2:
             # 탭 이동 시 수신 대기 상태 안내만 표시
-            self.label_camera_status.setText("트리거(AA)를 송신하려면 버튼을 누르세요.")
+            self.label_camera_status.setText("트리거를 송신하려면 버튼을 누르세요.")
             self.btn_trigger_aa.setEnabled(True)
 
             # self.run_camera_mode()
@@ -228,9 +227,13 @@ class MainWindow(QMainWindow):
             save_path = f"images/filter_{idx}.txt"
 
             # 이 함수 안에서 AA를 쏘고 바로 수신까지 처리합니다.
+            def progress_callback(p):
+                self.label_camera_status.setText(f"데이터 수신 중... {p}%")
+                QApplication.processEvents()  # GUI 업데이트 강제
+            
             success = self.fpga_manager.trigger_and_receive_mode(
                 save_path,
-                lambda p: self.label_camera_status.setText(f"데이터 수신 중... {p}%"),
+                progress_callback,
                 target_size=(self.TARGET_W * self.TARGET_H)
             )
 
@@ -297,7 +300,7 @@ class MainWindow(QMainWindow):
             self.stm_manager.send_coordinates_file(path,
                                                    lambda p: self.btn_send_camera_stm.setText(f"송신 중... {p}%"))
             StatusDialog("SUCCESS", "플로팅 명령 전송이 완료되었습니다.", self).exec()
-            self.btn_send_camera_stm.setText("STM32로 좌표 전송 시작")
+            self.btn_send_camera_stm.setText("전송 및 플로팅 시작")
 
     def center_on_screen_top(self):
         qr = self.frameGeometry()
@@ -425,6 +428,7 @@ class MainWindow(QMainWindow):
             QApplication.processEvents()
 
             def fpga_cb(p):
+                # p: 0-50% = 송신, 50-100% = 수신
                 if p < 50:
                     self.btn_start.setText(f"FPGA 송신 중... {p*2}%")
                 else:

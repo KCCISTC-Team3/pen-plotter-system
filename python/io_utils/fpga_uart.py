@@ -101,6 +101,7 @@ class FPGAUartManager:
                         received_data.extend(chunk)
                         start_time = time.time()  # 데이터가 들어오면 타이머 리셋
 
+                        # 진행률 업데이트 (매번 또는 완료 시)
                         if progress_cb:
                             p = int((len(received_data) / target_size) * 100)
                             progress_cb(min(p, 100))
@@ -152,15 +153,17 @@ class FPGAUartManager:
                 for i, (r, g, b) in enumerate(pixels):
                     ser.write(bytes([r, g, b]))
                     
-                    # 진행률 업데이트
+                    # 진행률 업데이트 (송신: 0-50%)
                     if progress_cb and i % 1000 == 0:
-                        progress_cb(int((i / total_pixels) * 100))
+                        progress_cb(int((i / total_pixels) * 50))  # 송신은 0-50%
                     
                     # 너무 빠르게 보내지 않도록 약간의 딜레이
                     if i % 500 == 0:
                         time.sleep(0.001)
 
                 ser.flush()
+                if progress_cb:
+                    progress_cb(50)  # 송신 완료
 
                 # [C] 데이터 수신 대기
                 start_wait = time.time()
@@ -169,9 +172,21 @@ class FPGAUartManager:
                         raise Exception("FPGA 응답 없음 (Timeout)")
                     time.sleep(0.01)
 
-                # [D] 데이터 수신 (W*H 바이트)
+                # [D] 데이터 수신 (W*H 바이트) - 청크 단위로 읽으면서 진행률 업데이트
                 target_size = W * H
-                received_raw = ser.read(target_size)
+                received_raw = bytearray()
+                while len(received_raw) < target_size:
+                    if ser.in_waiting > 0:
+                        chunk = ser.read(min(ser.in_waiting, target_size - len(received_raw)))
+                        received_raw.extend(chunk)
+                        
+                        # 진행률 업데이트 (수신: 50-100%)
+                        if progress_cb:
+                            p = 50 + int((len(received_raw) / target_size) * 50)
+                            progress_cb(min(p, 100))
+                    time.sleep(0.001)
+                
+                received_raw = bytes(received_raw)
                 
                 if received_raw:
                     with open(filtered_path, "w") as f_out:

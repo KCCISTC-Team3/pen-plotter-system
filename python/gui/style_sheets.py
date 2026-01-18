@@ -36,10 +36,15 @@ STYLE_SHEET = """
     }
     QPushButton:hover { background-color: #30363d; border-color: #8b949e; }
 
-    /* 실행 버튼 */
+    /* 실행 버튼 - 녹색 */
     QPushButton#start_btn {
         background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #238636, stop:1 #2ea043);
-        color: white; font-size: 16px; border: none;
+        color: white; font-size: 16px; font-weight: bold;
+        border: none; border-radius: 8px;
+        padding: 10px;
+    }
+    QPushButton#start_btn:hover {
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2ea043, stop:1 #238636);
     }
 
     /* 헤더 및 탭 */
