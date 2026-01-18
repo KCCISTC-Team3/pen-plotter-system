@@ -384,7 +384,7 @@ class MainWindow(QMainWindow):
                         receive_path=paths['filtered'], 
                         command_path=paths['commands'],
                         data_format="byte_per_pixel",  # 카메라 데이터는 픽셀당 1바이트
-                        show_visualization=False  # GUI 모드에서는 시각화 건너뛰기
+                        show_visualization=True  # 경로 최적화 결과 시각화
                     )
                     print("main_pipeline runner finished (camera mode)")
                 except Exception as e:
