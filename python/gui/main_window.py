@@ -420,7 +420,7 @@ class MainWindow(QMainWindow):
             self.btn_start.setText("처리 중...")
             QApplication.processEvents()
 
-            ########## FPGA FLOW (Enabled - 0x30 + RGB888 전송 후 수신) ###########
+            ########## FPGA FLOW (Enabled - 0xAA + RGB888 전송 후 수신) ###########
             self.btn_start.setText("FPGA 데이터 송신 중...")
             QApplication.processEvents()
 
@@ -438,7 +438,7 @@ class MainWindow(QMainWindow):
             )
 
             if success:
-                print("FPGA communication finished (sent 0x30 + RGB888, received W*H bytes)")
+                print("FPGA communication finished (sent 0xAA + RGB888, received W*H bytes)")
                 
                 # FPGA 수신 데이터를 이미지로 변환해서 source.png로 저장 (카메라 모드와 동일)
                 from io_utils.unpacker import load_hex_txt_to_bytes

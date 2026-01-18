@@ -74,7 +74,7 @@ class FPGAUartManager:
             ser.close()
 
     def trigger_and_receive_mode(self, save_path, progress_cb=None, target_size=None):
-        """[개선] 0xAA 트리거 송신 직후 즉시 수신 모드로 전환 (카메라 탭용)"""
+        """[개선] 0xBB 트리거 송신 직후 즉시 수신 모드로 전환 (카메라 탭용)"""
         self.is_receiving = True
         received_data = bytearray()
         start_time = time.time()  # 타임아웃 체크용
@@ -84,10 +84,10 @@ class FPGAUartManager:
             ser = serial.Serial(self.port, self.baudrate, timeout=0.1)
 
             if ser.is_open:
-                # 1. 트리거(AA) 송신
-                ser.write(bytes.fromhex("30"))
+                # 1. 트리거(0xBB) 송신 - 카메라 모드
+                ser.write(bytes.fromhex("BB"))
                 ser.flush()
-                print("Trigger AA sent. Entering receive mode...")
+                print("Trigger 0xBB sent. Entering receive mode...")
 
                 # 2. 즉시 수신 루프 진입
                 while self.is_receiving and len(received_data) < target_size:
@@ -121,7 +121,7 @@ class FPGAUartManager:
 
     def send_image_to_fpga(self, img_obj, filtered_path, progress_cb=None):
         """
-        이미지를 WxH로 리사이징하고 FPGA에 0x30 + RGB888 데이터 전송 후 수신
+        이미지를 WxH로 리사이징하고 FPGA에 0xAA + RGB888 데이터 전송 후 수신
         
         Args:
             img_obj: PIL Image 객체
@@ -143,8 +143,8 @@ class FPGAUartManager:
                 pixels = list(rgb_img.getdata())
                 total_pixels = len(pixels)
 
-                # [A] 트리거 송신 (0x30)
-                ser.write(bytes.fromhex("30"))
+                # [A] 트리거 송신 (0xAA) - 이미지 전송/드로잉 모드
+                ser.write(bytes.fromhex("AA"))
                 ser.flush()
                 time.sleep(0.1)
 
