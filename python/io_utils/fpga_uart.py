@@ -35,7 +35,7 @@ class FPGAUartManager:
                 ser.reset_output_buffer()
 
                 # [A] 트리거 송신
-                ser.write(bytes.fromhex("AA"))
+                ser.write(bytes.fromhex("30"))
                 ser.flush()
                 time.sleep(0.1)
 
@@ -121,11 +121,11 @@ class FPGAUartManager:
 
     def send_image_to_fpga(self, img_obj, filtered_path, progress_cb=None):
         """
-        이미지를 WxH로 리사이징하고 FPGA에 0xAA + RGB888 데이터 전송
+        이미지를 WxH로 리사이징하고 FPGA에 0x30 + RGB888 데이터 전송 후 수신
         
         Args:
             img_obj: PIL Image 객체
-            filtered_path: FPGA로부터 수신한 데이터를 저장할 경로
+            filtered_path: FPGA로부터 수신한 데이터를 저장할 경로 (.txt)
             progress_cb: 진행률 콜백 함수 (옵션)
         
         Returns:
@@ -143,8 +143,8 @@ class FPGAUartManager:
                 pixels = list(rgb_img.getdata())
                 total_pixels = len(pixels)
 
-                # [A] 트리거 송신 (0xAA)
-                ser.write(bytes.fromhex("AA"))
+                # [A] 트리거 송신 (0x30)
+                ser.write(bytes.fromhex("30"))
                 ser.flush()
                 time.sleep(0.1)
 

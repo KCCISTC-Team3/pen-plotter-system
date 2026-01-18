@@ -335,13 +335,14 @@ class MainWindow(QMainWindow):
         idx = 0
         while os.path.exists(f"images/image_{idx}.mem"): idx += 1
 
+        # 절대 경로로 변환하여 명확하게
+        base_dir = os.path.abspath('images')
         paths = {
-            'mem': f"images/image_{idx}.mem",
-            # 'filtered': f"images/filtered_{idx}.txt",
-            'filtered': f"images/05_canny_packed_1bpp_hex_{idx}.txt",
-            'binary': f"images/filtered_{idx}_binary.txt",
-            'source': f"images/source_{idx}.png",
-            'commands': f"images/out_commands_{idx}.txt"
+            'mem': os.path.join(base_dir, f"image_{idx}.mem"),
+            'filtered': os.path.join(base_dir, f"filtered_{idx}.txt"),  # FPGA 수신 데이터 저장 경로
+            'binary': os.path.join(base_dir, f"filtered_{idx}_binary.txt"),
+            'source': os.path.join(base_dir, f"source_{idx}.png"),  # FPGA 수신 데이터로부터 생성된 이미지
+            'commands': os.path.join(base_dir, f"out_commands_{idx}.txt")
         }
 
         try:
@@ -413,18 +414,21 @@ class MainWindow(QMainWindow):
             print(f"resize: {self.TARGET_W}*{self.TARGET_H}")
             img_resized = img.resize((self.TARGET_W, self.TARGET_H), Image.Resampling.LANCZOS)
 
-            img_resized.save(paths['source'])
+            # 원본 이미지는 source.png로 저장하지 않음 (FPGA 수신 데이터로 대체)
             self.btn_start.setEnabled(False)
 
             self.btn_start.setText("처리 중...")
             QApplication.processEvents()
 
-            ########## FPGA FLOW (Enabled - 0xAA + RGB888 전송) ###########
+            ########## FPGA FLOW (Enabled - 0x30 + RGB888 전송 후 수신) ###########
             self.btn_start.setText("FPGA 데이터 송신 중...")
             QApplication.processEvents()
 
             def fpga_cb(p):
-                self.btn_start.setText(f"FPGA 처리 중... {p}%")
+                if p < 50:
+                    self.btn_start.setText(f"FPGA 송신 중... {p*2}%")
+                else:
+                    self.btn_start.setText(f"FPGA 수신 중... {(p-50)*2}%")
                 QApplication.processEvents()
 
             success = self.fpga_manager.send_image_to_fpga(
@@ -434,7 +438,19 @@ class MainWindow(QMainWindow):
             )
 
             if success:
-                print("FPGA communication finished")
+                print("FPGA communication finished (sent 0x30 + RGB888, received W*H bytes)")
+                
+                # FPGA 수신 데이터를 이미지로 변환해서 source.png로 저장 (카메라 모드와 동일)
+                from io_utils.unpacker import load_hex_txt_to_bytes
+                raw_bytes = load_hex_txt_to_bytes(paths['filtered'])
+                if len(raw_bytes) >= self.TARGET_W * self.TARGET_H:
+                    img_data = raw_bytes[:self.TARGET_W * self.TARGET_H]
+                    img_array = np.frombuffer(img_data, dtype=np.uint8).reshape((self.TARGET_H, self.TARGET_W))
+                    # 0-255 값을 0 또는 255로 변환
+                    img_array = np.where(img_array > 127, 255, 0).astype(np.uint8)
+                    img_received = Image.fromarray(img_array, mode='L').convert('RGB')
+                    img_received.save(paths['source'])
+                    print(f"Source image saved from FPGA received data: {paths['source']}")
             else:
                 raise Exception("FPGA communication failed")
             
@@ -444,7 +460,14 @@ class MainWindow(QMainWindow):
                 self.btn_start.setText("이미지 처리 중...")
                 QApplication.processEvents()
 
-                run_pipeline(w=self.TARGET_W, h=self.TARGET_H, receive_path=paths['filtered'], command_path=paths['commands'])
+                # FPGA 수신 데이터는 176*240 바이트 (픽셀당 1바이트)이므로 byte_per_pixel 형식 사용
+                run_pipeline(
+                    w=self.TARGET_W, 
+                    h=self.TARGET_H, 
+                    receive_path=paths['filtered'], 
+                    command_path=paths['commands'],
+                    data_format="byte_per_pixel"  # 픽셀당 1바이트 (이전에는 1bpp 패킹이었음)
+                )
                 print("main_pipeline runner finished")
             else:
                 raise Exception("Text file for main pipeline not found.")
