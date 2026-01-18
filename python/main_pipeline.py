@@ -6,14 +6,33 @@ from image_processing import *
 from io_utils import *
 
 
-def run_pipeline(w, h, receive_path=RECEIVE_PATH, command_path=COMMAND_PATH):
+def run_pipeline(w, h, receive_path=RECEIVE_PATH, command_path=COMMAND_PATH, data_format="1bpp", show_visualization=True):
+    """
+    Run the path optimization pipeline.
+    
+    Args:
+        w: Image width
+        h: Image height
+        receive_path: Path to the hex text file with received data
+        command_path: Path to save the output commands
+        data_format: "1bpp" (packed 1 bit per pixel) or "byte_per_pixel" (1 byte per pixel, for camera data)
+    """
     ## 1. FPGA -> PC: Load filtered image from hex text file and extract contours
-    # Load raw bytes from hex text file w/ 0xAA (test only)
+    # Load raw bytes from hex text file
     raw_bytes = load_hex_txt_to_bytes(receive_path)
 
-    # Payload extraction
-    payload = extract_payload_after_header(raw_bytes, payload_len=(w * h + 7) // 8)
-    img255 = to_img255(unpack_payload_to_image(payload, w, h, bitorder=BITORDER))
+    # Convert bytes to image based on data format
+    if data_format == "byte_per_pixel":
+        # Camera mode: 1 byte per pixel (W*H bytes total)
+        payload = extract_payload_after_header(raw_bytes, payload_len=w * h)
+        # Convert bytes directly to image (0-255 values, assuming 0=black, 255=white or inverted)
+        img255 = np.frombuffer(payload, dtype=np.uint8).reshape((h, w))
+        # Ensure binary (0 or 255) - threshold at 127
+        img255 = np.where(img255 > 127, 255, 0).astype(np.uint8)
+    else:
+        # Default: 1bpp packed format
+        payload = extract_payload_after_header(raw_bytes, payload_len=(w * h + 7) // 8)
+        img255 = to_img255(unpack_payload_to_image(payload, w, h, bitorder=BITORDER))
 
     # Contour extraction
     contours = extract_contours_all(img255, min_len_px=MIN_CONTOUR_LEN_PX, retrieval=cv2.RETR_LIST)
@@ -87,26 +106,27 @@ def run_pipeline(w, h, receive_path=RECEIVE_PATH, command_path=COMMAND_PATH):
         for line in cmds[:50]:
             print(line.strip())
 
-    ## Visualization: original binary, overlay, optimized with pen-up links
-    binary_bgr = cv2.cvtColor(img255, cv2.COLOR_GRAY2BGR)   # original binary image in BGR
-    overlay = draw_contours_overlay(img255, contours)       # overlay with contours drawn in red
-    overlay_optimized = draw_contours_and_penup_links(
-        img255,
-        ordered_contours,
-        draw_contours=True,
-        draw_penup_links=True,
-        draw_index_labels=True,
-        font_scale=0.5,
-        font_thickness=0,
-    )
+    ## Visualization: original binary, overlay, optimized with pen-up links (optional)
+    if show_visualization:
+        binary_bgr = cv2.cvtColor(img255, cv2.COLOR_GRAY2BGR)   # original binary image in BGR
+        overlay = draw_contours_overlay(img255, contours)       # overlay with contours drawn in red
+        overlay_optimized = draw_contours_and_penup_links(
+            img255,
+            ordered_contours,
+            draw_contours=True,
+            draw_penup_links=True,
+            draw_index_labels=True,
+            font_scale=0.5,
+            font_thickness=0,
+        )
 
-    combined = np.hstack([binary_bgr, overlay, overlay_optimized])
-    
-    cv2.namedWindow("Original | Overlay | Optimized", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("Original | Overlay | Optimized", 1400, 700)
-    cv2.imshow("Original | Overlay | Optimized", combined)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        combined = np.hstack([binary_bgr, overlay, overlay_optimized])
+        
+        cv2.namedWindow("Original | Overlay | Optimized", cv2.WINDOW_NORMAL)
+        cv2.resizeWindow("Original | Overlay | Optimized", 1400, 700)
+        cv2.imshow("Original | Overlay | Optimized", combined)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 
 

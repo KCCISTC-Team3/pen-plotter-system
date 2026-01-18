@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from PyQt6.QtWidgets import (QMainWindow, QTabWidget, QWidget, QVBoxLayout,
                              QHBoxLayout, QPushButton, QFileDialog, QLabel,
                              QFrame, QApplication, QMessageBox)
@@ -196,7 +197,7 @@ class MainWindow(QMainWindow):
     def _get_next_index(self):
         idx = 0
         while os.path.exists(f"images/image_{idx}.mem") or \
-                os.path.exists(f"images/filter_{idx}.mem"):
+                os.path.exists(f"images/filter_{idx}.txt"):
             idx += 1
         return idx
 
@@ -212,8 +213,8 @@ class MainWindow(QMainWindow):
             self.label_camera_status.setText("트리거(AA)를 송신하려면 버튼을 누르세요.")
             self.btn_trigger_aa.setEnabled(True)
 
-            #self.run_camera_mode()
-            #QTimer.singleShot(200, self.run_camera_mode)
+            # self.run_camera_mode()
+            # QTimer.singleShot(200, self.run_camera_mode)
 
     def start_camera_trigger(self):
         """사용자 버튼 클릭 시 실행: 통합 모드 호출"""
@@ -224,7 +225,7 @@ class MainWindow(QMainWindow):
 
             # 별도의 송신 없이, 통합 메서드 하나만 호출합니다.
             idx = self._get_next_index()
-            save_path = f"images/filter_{idx}.mem"
+            save_path = f"images/filter_{idx}.txt"
 
             # 이 함수 안에서 AA를 쏘고 바로 수신까지 처리합니다.
             success = self.fpga_manager.trigger_and_receive_mode(
@@ -235,7 +236,8 @@ class MainWindow(QMainWindow):
 
             if success:
                 self.label_camera_status.setText(f"✅ 완료! 파일: {os.path.basename(save_path)}")
-                self.btn_send_camera_stm.setVisible(True)
+                # 카메라 데이터 수신 후 자동으로 경로 최적화 및 STM 전송 준비
+                self.process_and_start()
             else:
                 raise Exception("통신 실패 또는 타임아웃")
 
@@ -249,7 +251,7 @@ class MainWindow(QMainWindow):
         self.btn_trigger_aa.setEnabled(False)
 
         idx = self._get_next_index()
-        save_path = f"images/filter_{idx}.mem"
+        save_path = f"images/filter_{idx}.txt"
 
         # 1. 상태 표시 업데이트
         self.label_camera_status.setText("📷 FPGA 트리거 송신 및 수신 대기 중...")
@@ -277,6 +279,7 @@ class MainWindow(QMainWindow):
             self.label_camera_status.setPixmap(pixmap)
 
             self.label_camera_status.setText(f"✅ 수신 완료!\n파일: {os.path.basename(save_path)}")
+            self.process_and_start()
             self.btn_send_camera_stm.setVisible(True)
         else:
             # 타임아웃이나 중단 시 처리
@@ -351,24 +354,64 @@ class MainWindow(QMainWindow):
                 ptr.setsize(qimg.height() * qimg.width() * 4)
                 img = Image.frombuffer("RGBA", (qimg.width(), qimg.height()), ptr, 'raw', "RGBA", 0, 1).convert("RGB")
             elif self.tabs.currentIndex() == 2: # 카메라 수신 탭
+                # 카메라 모드: FPGA 전송 건너뛰고 수신한 데이터를 바로 경로 최적화에 사용
                 current_idx = self._get_next_index() - 1
-                recent_mem = f"images/filter_{current_idx}.mem"
-                if not os.path.exists(recent_mem):
+                paths['filtered'] = f"images/filter_{current_idx}.txt"
+                if not os.path.exists(paths['filtered']):
                     raise Exception("수신된 카메라 데이터 파일이 없습니다.")
-
-                # 2. RGB888 텍스트 데이터를 읽어 이미지 객체로 복원
-                with open(recent_mem, 'r') as f:
-                    hex_data = f.read().split()  # 'ffffff' 단위로 분리
-
-                # 수신된 hex를 (R, G, B) 튜플 리스트로 변환
-                pixels = [(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)) for h in hex_data]
-
-                # 3. 이미지 객체 생성 (176x240 규격)
-                img = Image.new("RGB", (self.TARGET_W, self.TARGET_H))
-                img.putdata(pixels)
+                
+                # source.png는 선택사항 (디버깅용) - 카메라 데이터로부터 생성
+                from io_utils.unpacker import load_hex_txt_to_bytes
+                raw_bytes = load_hex_txt_to_bytes(paths['filtered'])
+                if len(raw_bytes) >= self.TARGET_W * self.TARGET_H:
+                    img_data = raw_bytes[:self.TARGET_W * self.TARGET_H]
+                    img_array = np.frombuffer(img_data, dtype=np.uint8).reshape((self.TARGET_H, self.TARGET_W))
+                    # 0-255 값을 0 또는 255로 변환
+                    img_array = np.where(img_array > 127, 255, 0).astype(np.uint8)
+                    img = Image.fromarray(img_array, mode='L').convert('RGB')
+                    img.save(paths['source'])
+                
+                self.btn_start.setEnabled(False)
+                self.btn_start.setText("경로 최적화 중...")
+                QApplication.processEvents()
+                
+                # 카메라 데이터는 바로 경로 최적화로 넘기기 (이미지 프로세싱 없음)
+                try:
+                    run_pipeline(
+                        w=self.TARGET_W, 
+                        h=self.TARGET_H, 
+                        receive_path=paths['filtered'], 
+                        command_path=paths['commands'],
+                        data_format="byte_per_pixel",  # 카메라 데이터는 픽셀당 1바이트
+                        show_visualization=False  # GUI 모드에서는 시각화 건너뛰기
+                    )
+                    print("main_pipeline runner finished (camera mode)")
+                except Exception as e:
+                    print(f"run_pipeline error: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    raise
+                
+                # 카메라 모드일 때는 FPGA 전송 건너뛰고 바로 STM 전송으로
+                if os.path.exists(paths['commands']):
+                    print(f"Commands file created: {paths['commands']}")
+                    self.btn_start.setText("STM32 플로팅 준비 중...")
+                    QApplication.processEvents()
+                    
+                    def stm_cb(p):
+                        self.btn_start.setText(f"STM32 플로팅 중... {p}%")
+                        QApplication.processEvents()
+                    
+                    stm_success = self.stm_manager.send_coordinates_file(paths['commands'], stm_cb)
+                    
+                    if stm_success:
+                        StatusDialog("SUCCESS", "이미지 처리 및 플로팅 전송이 완료되었습니다!", self).exec()
+                    else:
+                        raise Exception("STM32 통신 중 오류 발생")
+                return  # 카메라 모드일 때는 여기서 종료
 
             print(f"resize: {self.TARGET_W}*{self.TARGET_H}")
-            img_resized = img.resize((176, 240), Image.Resampling.LANCZOS)
+            img_resized = img.resize((self.TARGET_W, self.TARGET_H), Image.Resampling.LANCZOS)
 
             img_resized.save(paths['source'])
             self.btn_start.setEnabled(False)
@@ -376,39 +419,24 @@ class MainWindow(QMainWindow):
             self.btn_start.setText("처리 중...")
             QApplication.processEvents()
 
-            # Use filtered_hex_img_gen to process and save .mem file (not using FPGA now)
-            from image_processing.filtered_hex_img_gen import process_and_save
-            process_and_save(
-                paths['source'],
-                out_dir="images",
-                idx=idx,
-                gaussian_ksize=5,
-                gaussian_sigma=1.0,
-                sobel_ksize=3,
-                canny_low=50,
-                canny_high=150,
-                hex_mode="stream",      # "stream" or "tokens"
-                save_packed_1bpp=True,
-            )
-
-            ########### FPGA FLOW (Disabled 01.13.2026) ###########
+            ########## FPGA FLOW (Enabled - 0xAA + RGB888 전송) ###########
             self.btn_start.setText("FPGA 데이터 송신 중...")
             QApplication.processEvents()
 
-            if self.fpga_manager.save_as_mem(img_resized, paths['mem'], target_size=(self.TARGET_W, self.TARGET_H)):
-                def fpga_cb(p):
-                    self.btn_start.setText(f"FPGA 처리 중... {p}%")
-                    QApplication.processEvents()
+            def fpga_cb(p):
+                self.btn_start.setText(f"FPGA 처리 중... {p}%")
+                QApplication.processEvents()
 
-                success = self.fpga_manager.process_serial_communication(
-                    paths['mem'], paths['filtered'], fpga_cb, target_size=(self.TARGET_W * self.TARGET_H)
-                )
+            success = self.fpga_manager.send_image_to_fpga(
+                img_resized, 
+                paths['filtered'], 
+                fpga_cb
+            )
 
-                if success:
-                    self.fpga_manager.convert_hex_to_binary_text(paths['filtered'], paths['binary'])
-                    print("FPGA communication finished")
-                else:
-                    raise Exception("FPGA communication failed")
+            if success:
+                print("FPGA communication finished")
+            else:
+                raise Exception("FPGA communication failed")
             
 
             ## Main pipeline runner (Added 01.10.2026)

@@ -2,6 +2,7 @@ import serial
 import time
 import os
 from PIL import Image
+from config import W, H
 
 
 class FPGAUartManager:
@@ -84,7 +85,7 @@ class FPGAUartManager:
 
             if ser.is_open:
                 # 1. 트리거(AA) 송신
-                ser.write(bytes.fromhex("AA"))
+                ser.write(bytes.fromhex("30"))
                 ser.flush()
                 print("Trigger AA sent. Entering receive mode...")
 
@@ -117,6 +118,73 @@ class FPGAUartManager:
             return False
         finally:
             if 'ser' in locals(): ser.close()
+
+    def send_image_to_fpga(self, img_obj, filtered_path, progress_cb=None):
+        """
+        이미지를 WxH로 리사이징하고 FPGA에 0xAA + RGB888 데이터 전송
+        
+        Args:
+            img_obj: PIL Image 객체
+            filtered_path: FPGA로부터 수신한 데이터를 저장할 경로
+            progress_cb: 진행률 콜백 함수 (옵션)
+        
+        Returns:
+            bool: 성공 여부
+        """
+        ser = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=20)
+        try:
+            if ser.is_open:
+                time.sleep(3)
+                ser.reset_input_buffer()
+                ser.reset_output_buffer()
+
+                # 이미지를 WxH로 리사이징하고 RGB로 변환
+                rgb_img = img_obj.resize((W, H), Image.Resampling.LANCZOS).convert("RGB")
+                pixels = list(rgb_img.getdata())
+                total_pixels = len(pixels)
+
+                # [A] 트리거 송신 (0xAA)
+                ser.write(bytes.fromhex("AA"))
+                ser.flush()
+                time.sleep(0.1)
+
+                # [B] RGB888 데이터 송신 (R, G, B를 각각 별도의 바이트로 전송)
+                for i, (r, g, b) in enumerate(pixels):
+                    ser.write(bytes([r, g, b]))
+                    
+                    # 진행률 업데이트
+                    if progress_cb and i % 1000 == 0:
+                        progress_cb(int((i / total_pixels) * 100))
+                    
+                    # 너무 빠르게 보내지 않도록 약간의 딜레이
+                    if i % 500 == 0:
+                        time.sleep(0.001)
+
+                ser.flush()
+
+                # [C] 데이터 수신 대기
+                start_wait = time.time()
+                while ser.in_waiting == 0:
+                    if time.time() - start_wait > 10:
+                        raise Exception("FPGA 응답 없음 (Timeout)")
+                    time.sleep(0.01)
+
+                # [D] 데이터 수신 (W*H 바이트)
+                target_size = W * H
+                received_raw = ser.read(target_size)
+                
+                if received_raw:
+                    with open(filtered_path, "w") as f_out:
+                        # Hex 텍스트 형식으로 저장 (2자리씩)
+                        for byte_val in received_raw:
+                            f_out.write(f"{byte_val:02x}")
+                    return True
+            return False
+        except Exception as e:
+            print(f"FPGA 통신 에러: {e}")
+            return False
+        finally:
+            ser.close()
 
     def convert_hex_to_binary_text(self, hex_path, bin_path):
         """수신된 Hex 파일을 일자 나열된 Binary 텍스트로 변환"""
