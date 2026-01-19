@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-from config import RECEIVE_PATH, COMMAND_PATH, BITORDER, MIN_CONTOUR_LEN_PX, PIXEL_TO_MM, STEP_MM, EPSILON_MM
+from config import RECEIVE_PATH, COMMAND_PATH, BITORDER, MIN_CONTOUR_LEN_PX, PIXEL_TO_MM, STEP_MM, EPSILON_MM, CROP_TOP, CROP_LEFT
 from image_processing import *
 from io_utils import *
 
@@ -33,6 +33,14 @@ def run_pipeline(w, h, receive_path=RECEIVE_PATH, command_path=COMMAND_PATH, dat
         # Default: 1bpp packed format
         payload = extract_payload_after_header(raw_bytes, payload_len=(w * h + 7) // 8)
         img255 = to_img255(unpack_payload_to_image(payload, w, h, bitorder=BITORDER))
+
+    # Crop image to remove noise (top rows and left columns)
+    if CROP_TOP > 0 or CROP_LEFT > 0:
+        img255 = img255[CROP_TOP:, CROP_LEFT:]
+        # Update dimensions for subsequent processing
+        w = w - CROP_LEFT
+        h = h - CROP_TOP
+        print(f"Image cropped: removed {CROP_TOP} rows from top, {CROP_LEFT} columns from left. New size: {w}x{h}")
 
     # Contour extraction
     contours = extract_contours_all(img255, min_len_px=MIN_CONTOUR_LEN_PX, retrieval=cv2.RETR_LIST)

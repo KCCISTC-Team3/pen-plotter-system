@@ -13,6 +13,11 @@ BAUD = 115200           # Baud Rate (fixed)
 W, H = 176, 240         # Image width and height in pixels (only for test script)
 # PAYLOAD_LEN = (W * H + 7) // 8  # Payload length in bytes, ceiling division
 
+# Image cropping settings (to remove noise from FPGA edge detection)
+CROP_TOP = 3    # Number of rows to crop from top
+CROP_LEFT = 4   # Number of columns to crop from left
+# Resulting image size: (W - CROP_LEFT) x (H - CROP_TOP) = 172 x 237
+
 # FPGA communication settings
 BITORDER = "big"    # try "little" if needed
 
