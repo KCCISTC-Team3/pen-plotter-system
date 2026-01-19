@@ -73,9 +73,9 @@ def run_pipeline(w, h, receive_path=RECEIVE_PATH, command_path=COMMAND_PATH, dat
         c_simple = rdp_simplify(c_mm, epsilon=EPSILON_MM)
 
         # Densify so that consecutive points <= STEP_MM
-        c_mm_dense = densify_polyline_mm(c_simple, step_mm=STEP_MM)
+        # c_mm_dense = densify_polyline_mm(c_simple, step_mm=STEP_MM)
         # contours_converted.append(c_simple)
-        contours_converted.append(c_mm_dense)
+        contours_converted.append(c_simple)
     # print(contours_converted)
 
     # 2) Build commands with pen up/down
@@ -133,8 +133,8 @@ def run_pipeline(w, h, receive_path=RECEIVE_PATH, command_path=COMMAND_PATH, dat
         cv2.namedWindow("Original | Overlay | Optimized", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("Original | Overlay | Optimized", 1400, 700)
         cv2.imshow("Original | Overlay | Optimized", combined)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # 창을 띄운 상태로 바로 반환 (waitKey 제거하여 창을 닫지 않고 계속 진행)
+        cv2.waitKey(1)  # 1ms 대기로 창 업데이트만 수행
 
 
 

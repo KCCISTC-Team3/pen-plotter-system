@@ -54,4 +54,7 @@ def build_command_sequence_from_contours_xy(
         x1, y1 = float(c[-1, 0]), float(c[-1, 1])
         cmds.append(format_cmd(x1, y1, pen_up_z))
 
+    # Return to origin (0, 0) at the end
+    cmds.append(format_cmd(0.0, 0.0, pen_up_z))
+
     return cmds

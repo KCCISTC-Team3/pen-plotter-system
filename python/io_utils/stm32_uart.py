@@ -70,11 +70,14 @@ class STM32UartManager:
                 if progress_cb: progress_cb(int(((i + 1) / len(gcode_content)) * 100))
 
             print("\nTransfer complete.")
+            return True  # 정상 완료 시 True 반환
 
         except FileNotFoundError:
             print(f"\nERROR: '{file_path}' File not found.")
+            return False  # 파일 없음 시 False 반환
         except Exception as e:
             print(f"\nERROR: {e}")
+            return False  # 예외 발생 시 False 반환
         finally:
             if ser and ser.is_open:
                 ser.close()

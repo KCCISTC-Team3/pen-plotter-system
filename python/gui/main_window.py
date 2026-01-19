@@ -375,8 +375,8 @@ class MainWindow(QMainWindow):
                     img = Image.fromarray(img_array, mode='L').convert('RGB')
                     img.save(paths['source'])
                 
-                self.btn_start.setEnabled(False)
-                self.btn_start.setText("경로 최적화 중...")
+                # 카메라 모드에서는 label_camera_status를 사용하여 상태 표시
+                self.label_camera_status.setText("경로 최적화 중...")
                 QApplication.processEvents()
                 
                 # 카메라 데이터는 바로 경로 최적화로 넘기기 (이미지 프로세싱 없음)
@@ -387,7 +387,7 @@ class MainWindow(QMainWindow):
                         receive_path=paths['filtered'], 
                         command_path=paths['commands'],
                         data_format="byte_per_pixel",  # 카메라 데이터는 픽셀당 1바이트
-                        show_visualization=True  # 경로 최적화 결과 시각화
+                        show_visualization=True  # 경로 최적화 결과 시각화 (창을 닫지 않고 바로 진행)
                     )
                     print("main_pipeline runner finished (camera mode)")
                 except Exception as e:
@@ -399,16 +399,17 @@ class MainWindow(QMainWindow):
                 # 카메라 모드일 때는 FPGA 전송 건너뛰고 바로 STM 전송으로
                 if os.path.exists(paths['commands']):
                     print(f"Commands file created: {paths['commands']}")
-                    self.btn_start.setText("STM32 플로팅 준비 중...")
+                    self.label_camera_status.setText("STM32 플로팅 준비 중...")
                     QApplication.processEvents()
                     
                     def stm_cb(p):
-                        self.btn_start.setText(f"STM32 플로팅 중... {p}%")
+                        self.label_camera_status.setText(f"STM32 플로팅 중... {p}%")
                         QApplication.processEvents()
                     
                     stm_success = self.stm_manager.send_coordinates_file(paths['commands'], stm_cb)
                     
                     if stm_success:
+                        self.label_camera_status.setText("✅ 플로팅 전송 완료!")
                         StatusDialog("SUCCESS", "이미지 처리 및 플로팅 전송이 완료되었습니다!", self).exec()
                     else:
                         raise Exception("STM32 통신 중 오류 발생")
@@ -496,6 +497,11 @@ class MainWindow(QMainWindow):
 
         except Exception as e:
             QMessageBox.critical(self, "오류", str(e))
+            # 카메라 모드에서 오류 발생 시 버튼 다시 활성화
+            if self.tabs.currentIndex() == 2:
+                self.btn_trigger_aa.setEnabled(True)
         finally:
-            self.btn_start.setEnabled(True)
-            self.btn_start.setText("전송 및 플로팅 시작")
+            # 카메라 모드가 아닐 때만 btn_start 업데이트
+            if self.tabs.currentIndex() != 2:
+                self.btn_start.setEnabled(True)
+                self.btn_start.setText("전송 및 플로팅 시작")
