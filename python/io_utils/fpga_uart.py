@@ -172,8 +172,8 @@ class FPGAUartManager:
                         raise Exception("FPGA 응답 없음 (Timeout)")
                     time.sleep(0.01)
 
-                # [D] 데이터 수신 (W*H 바이트) - 청크 단위로 읽으면서 진행률 업데이트
-                target_size = W * H
+                # [D] 데이터 수신 (1bpp 패킹: (W*H+7)//8 바이트) - 청크 단위로 읽으면서 진행률 업데이트
+                target_size = (W * H + 7) // 8  # 8픽셀당 1바이트
                 received_raw = bytearray()
                 while len(received_raw) < target_size:
                     if ser.in_waiting > 0:

@@ -442,19 +442,21 @@ class MainWindow(QMainWindow):
             )
 
             if success:
-                print("FPGA communication finished (sent 0xAA + RGB888, received W*H bytes)")
+                print("FPGA communication finished (sent 0xAA + RGB888, received 1bpp packed data)")
                 
-                # FPGA 수신 데이터를 이미지로 변환해서 source.png로 저장 (카메라 모드와 동일)
-                from io_utils.unpacker import load_hex_txt_to_bytes
+                # FPGA 수신 데이터를 1bpp 패킹에서 언패킹하여 이미지로 변환
+                from io_utils.unpacker import load_hex_txt_to_bytes, unpack_payload_to_image, to_img255
                 raw_bytes = load_hex_txt_to_bytes(paths['filtered'])
-                if len(raw_bytes) >= self.TARGET_W * self.TARGET_H:
-                    img_data = raw_bytes[:self.TARGET_W * self.TARGET_H]
-                    img_array = np.frombuffer(img_data, dtype=np.uint8).reshape((self.TARGET_H, self.TARGET_W))
-                    # 0-255 값을 0 또는 255로 변환
-                    img_array = np.where(img_array > 127, 255, 0).astype(np.uint8)
-                    img_received = Image.fromarray(img_array, mode='L').convert('RGB')
+                expected_size = (self.TARGET_W * self.TARGET_H + 7) // 8
+                if len(raw_bytes) >= expected_size:
+                    payload = raw_bytes[:expected_size]
+                    # 1bpp 패킹 언패킹 (0 또는 1 값)
+                    img01 = unpack_payload_to_image(payload, self.TARGET_W, self.TARGET_H, bitorder=BITORDER)
+                    # 0/1을 0/255로 변환
+                    img255 = to_img255(img01)
+                    img_received = Image.fromarray(img255, mode='L').convert('RGB')
                     img_received.save(paths['source'])
-                    print(f"Source image saved from FPGA received data: {paths['source']}")
+                    print(f"Source image saved from FPGA received data (1bpp unpacked): {paths['source']}")
             else:
                 raise Exception("FPGA communication failed")
             
@@ -464,13 +466,13 @@ class MainWindow(QMainWindow):
                 self.btn_start.setText("이미지 처리 중...")
                 QApplication.processEvents()
 
-                # FPGA 수신 데이터는 176*240 바이트 (픽셀당 1바이트)이므로 byte_per_pixel 형식 사용
+                # FPGA 수신 데이터는 1bpp 패킹 형식이므로 기본 형식 사용
                 run_pipeline(
                     w=self.TARGET_W, 
                     h=self.TARGET_H, 
                     receive_path=paths['filtered'], 
                     command_path=paths['commands'],
-                    data_format="byte_per_pixel"  # 픽셀당 1바이트 (이전에는 1bpp 패킹이었음)
+                    data_format="1bpp"  # 8픽셀당 1바이트 패킹 형식
                 )
                 print("main_pipeline runner finished")
             else:
