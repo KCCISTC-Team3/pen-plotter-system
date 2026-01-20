@@ -1,4 +1,0 @@
-../Core/Survo/Survo.c:14:6:Survo_Init	8	static
-../Core/Survo/Survo.c:25:6:Survo_SetAngle	24	static
-../Core/Survo/Survo.c:43:6:Survo_SetCenter	8	static
-../Core/Survo/Survo.c:48:6:Survo_Stop	8	static

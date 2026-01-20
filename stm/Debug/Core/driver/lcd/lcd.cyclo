@@ -1,0 +1,16 @@
+../Core/driver/lcd/lcd.c:13:6:LCD_CmdMode	1
+../Core/driver/lcd/lcd.c:18:6:LCD_DataMode	1
+../Core/driver/lcd/lcd.c:23:6:LCD_WriteMode	1
+../Core/driver/lcd/lcd.c:28:6:LCD_SendData	1
+../Core/driver/lcd/lcd.c:34:6:LCD_E_High	1
+../Core/driver/lcd/lcd.c:40:6:LCD_E_Low	1
+../Core/driver/lcd/lcd.c:46:6:LCD_WriteNibble	1
+../Core/driver/lcd/lcd.c:54:6:LCD_WriteByte	1
+../Core/driver/lcd/lcd.c:61:6:LCD_WriteCmdData	1
+../Core/driver/lcd/lcd.c:68:6:LCD_WriteCharData	1
+../Core/driver/lcd/lcd.c:75:6:LCD_BackLightOn	1
+../Core/driver/lcd/lcd.c:81:6:LCD_BackLightOff	1
+../Core/driver/lcd/lcd.c:87:6:LCD_Init	1
+../Core/driver/lcd/lcd.c:108:6:LCD_gotoXY	1
+../Core/driver/lcd/lcd.c:118:6:LCD_WriteString	2
+../Core/driver/lcd/lcd.c:125:6:LCD_WriteStringXY	1

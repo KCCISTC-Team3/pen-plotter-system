@@ -1,6 +1,6 @@
-../Core/Src/freertos.c:74:6:vApplicationGetIdleTaskMemory	24	static
-../Core/Src/freertos.c:88:6:MX_FREERTOS_Init	128	static
-../Core/Src/freertos.c:139:6:StartDefaultTask	16	static
-../Core/Src/freertos.c:157:6:Uart_rx	16	static
-../Core/Src/freertos.c:175:6:Calculation	16	static
-../Core/Src/freertos.c:193:6:Motor_drive	16	static
+../Core/Src/freertos.c:80:6:vApplicationGetIdleTaskMemory	24	static
+../Core/Src/freertos.c:94:6:MX_FREERTOS_Init	160	static
+../Core/Src/freertos.c:154:6:StartDefaultTask	16	static
+../Core/Src/freertos.c:171:6:Uart	16	static
+../Core/Src/freertos.c:191:6:Calculation	16	static
+../Core/Src/freertos.c:210:6:Motor_drive	16	static

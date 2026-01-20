@@ -1,0 +1,2 @@
+../Core/ap/Controller/Controller_Plotter.c:18:6:Controller_Plotter_Init	1
+../Core/ap/Controller/Controller_Plotter.c:24:6:Controller_Plotter_Execute	10

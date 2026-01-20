@@ -1,35 +1,39 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2026 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2026 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "i2c.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "../ap/Presenter/Presenter.h"
+#include "../ap/Controller/Controller.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+extern osThreadId Motor_TaskHandle;
+
 
 /* USER CODE END PTD */
 
@@ -92,8 +96,8 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
-  MX_TIM3_Init();
   MX_USART2_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -108,12 +112,13 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+
+	while (1) {
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+	}
   /* USER CODE END 3 */
 }
 
@@ -177,7 +182,77 @@ void SystemClock_Config(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
+	if (htim->Instance == TIM2) {
+		// 1. 모든 스텝을 다 채웠는지 확인
+		if (isr_ctx.current_step >= isr_ctx.max_steps) {
+			HAL_TIM_Base_Stop_IT(htim);         // 타이머 정지
+			osSignalSet(Motor_TaskHandle, 0x01); // Presenter 태스크에 완료 신호 전송
+			return;
+		}
+		// ---------------------------------------------------------
+		// 2. 브레젠험 알고리즘 1단계 실행 (물리적 펄스 발생)
+		// ---------------------------------------------------------
 
+		// 주축(Master)은 무조건 한 스텝 이동
+		if (isr_ctx.is_a_master) {
+			// A축이 Master인 경우 // 드라이버에서 코드가져오기
+			Step_Set_StepPin(&Step_motor_1, GPIO_PIN_SET);
+		} else {
+			// B축이 Master인 경우 // 드라이버에서 코드가져오기
+			Step_Set_StepPin(&Step_motor_2, GPIO_PIN_SET);
+		}
+
+		// 보조축(Slave) 이동 여부 결정
+		isr_ctx.error -= isr_ctx.min_steps;
+		if (isr_ctx.error < 0) {
+			if (isr_ctx.is_a_master) {
+				// A가 Master면 B가 Slave // 드라이버에서 코드가져오기
+				Step_Set_StepPin(&Step_motor_2, GPIO_PIN_SET);
+			} else {
+				// B가 Master면 A가 Slave // 드라이버에서 코드가져오기
+				Step_Set_StepPin(&Step_motor_1, GPIO_PIN_SET);
+			}
+			isr_ctx.error += isr_ctx.max_steps;
+		}
+
+		// 스텝 펄스 폭 유지를 위한 짧은 지연 (필요 시) 후 LOW (드라이버 사양에 따름)
+		// 실제로는 다음 인터럽트 시작 시 LOW로 만들어도 무방함 // 드라이버에서 코드가져오기
+
+		Step_Set_StepPin(&Step_motor_1, GPIO_PIN_RESET);
+		Step_Set_StepPin(&Step_motor_2, GPIO_PIN_RESET);
+		// ---------------------------------------------------------
+		// 3. 가감속 계산 및 다음 ARR 업데이트
+		// ---------------------------------------------------------
+		isr_ctx.current_step++;
+		uint32_t next_arr = isr_ctx.target_arr;
+
+		// 가속 구간 (현재 스텝이 accel_steps보다 작을 때)
+		if (isr_ctx.current_step < isr_ctx.accel_steps) {
+			// 선형 가속: start_arr에서 target_arr로 서서히 낮아짐 (속도는 빨라짐)
+			next_arr = isr_ctx.start_arr
+					- ((isr_ctx.start_arr - isr_ctx.target_arr)
+							* isr_ctx.current_step / isr_ctx.accel_steps);
+		}
+		// 감속 구간 (현재 스텝이 decel_start_step보다 클 때)
+		else if (isr_ctx.current_step >= isr_ctx.decel_start_step) {
+//			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+
+			uint32_t decel_step_count = isr_ctx.current_step
+					- isr_ctx.decel_start_step;
+			uint32_t total_decel_steps = isr_ctx.max_steps
+					- isr_ctx.decel_start_step;
+
+			if (total_decel_steps > 0) {
+				// 선형 감속: target_arr에서 start_arr로 서서히 높아짐 (속도는 느려짐)
+				next_arr = isr_ctx.target_arr
+						+ ((isr_ctx.start_arr - isr_ctx.target_arr)
+								* decel_step_count / total_decel_steps);
+			}
+		}
+
+		// 다음 인터럽트 주기를 위해 타이머 ARR 업데이트
+		__HAL_TIM_SET_AUTORELOAD(htim, next_arr);
+	}
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM11)
   {
@@ -195,11 +270,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 
