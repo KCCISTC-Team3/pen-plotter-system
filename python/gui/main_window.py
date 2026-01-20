@@ -320,20 +320,20 @@ class MainWindow(QMainWindow):
         
         # 동적으로 스타일시트 업데이트
         bar.setStyleSheet(f"""
-            QProgressBar {{
-                border: 2px solid #30363d;
-                border-radius: 5px;
-                background-color: #161b22;
-                text-align: center;
-                color: #ffffff;
-                font-size: 14px;
-                font-weight: bold;
-            }}
-            QProgressBar::chunk {{
-                background-color: rgb({r}, {g}, {b});
-                border-radius: 3px;
-            }}
-        """)
+        QProgressBar {{
+            border: 2px solid #30363d;
+            border-radius: 5px;
+            background-color: #161b22;
+            text-align: center;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: bold;
+        }}
+        QProgressBar::chunk {{
+            background-color: #58a6ff;
+            border-radius: 3px;
+        }}
+    """)
         
         if message:
             bar.setFormat(f"{message} ({value}%)")
